@@ -18,19 +18,19 @@ void set_output(tld_state *state,char *arg){
 		error("only one output can be specfied");
 		exit(EXIT_FAILURE);
 	}
-	state->out = fopen(arg,"w");
+	state->out = tld_open_file(arg,"w");
 	if(!state->out){
 		perror(arg);
 		exit(EXIT_FAILURE);
 	}
 }
 void set_script(tld_state *state,char *arg){
-	if(state->out){
+	if(state->script){
 		error("only one script can be specfied");
 		exit(EXIT_FAILURE);
 	}
-	state->out = fopen(arg,"r");
-	if(!state->out){
+	state->script = fopen(arg,"r");
+	if(!state->script){
 		perror(arg);
 		exit(EXIT_FAILURE);
 	}
@@ -67,9 +67,12 @@ void parse_arg(tld_state *state,int argc,char **argv){
 						exit(EXIT_FAILURE);
 					}
 					options[j].func(state,argv[i+1]);
+					i++;
 				}
-				break;
+				goto finish_long;
 			}
+			error("unknow option '%s'",argv[i]);
+			exit(EXIT_FAILURE);
 		} else {
 			//short option
 			for(int k=1; argv[i][k]; k++){
@@ -82,10 +85,16 @@ void parse_arg(tld_state *state,int argc,char **argv){
 						}
 						options[j].func(state,argv[i+1]);
 					}
-					break;
+					goto finish_short;
 				}
+				error("unknow option '-%c'",argv[i][k]);
+				exit(EXIT_FAILURE);
+finish_short:
+				continue;
 			}
 		}
+finish_long:
+		continue;
 	}
 }
 
@@ -93,5 +102,15 @@ int main(int argc,char **argv){
 	tld_state state;
 	memset(&state,0,sizeof(state));
 	parse_arg(&state,argc,argv);
+
+	//default value
+	if(!state.out){
+		state.out = tld_open_file("a.out","w");
+		if(!state.out){
+			perror("a.out");
+			exit(EXIT_FAILURE);
+		}
+	}
+	linking(&state);
 	return 0;
 }

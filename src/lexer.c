@@ -4,17 +4,25 @@
 #include <ctype.h>
 #include "tld.h"
 
+//small lexer for C like langages
+//tayoky 2025
+
 struct tok {
 	char *str;
 	size_t len;
 	int type;
 };
 
+struct keyword {
+	char *str;
+	int type;
+};
+
 #define TOK(t,n) {.type = t,.str = n,.len = sizeof(n)-1}
+#define KEYWORD(t,s) {.type = t,.str = s}
 
 //must be from bigger to smaller
 struct tok tokens[] = {
-	TOK(T_SPACE      ," "),
 	TOK(T_NEWLINE    ,"\n"),
 	TOK(T_OPEN_BRACK ,"{"),
 	TOK(T_CLOSE_BRACK,"}"),
@@ -23,6 +31,11 @@ struct tok tokens[] = {
 	TOK(T_EQUAL      ,"="),
 	TOK(T_SEMI_COLON ,";"),
 	TOK(T_STAR       ,"*"),
+};
+
+struct keyword keywords[] = {
+	KEYWORD(T_SECTIONS,"SECTIONS"),
+	KEYWORD(T_ENTRY   ,"ENTRY"),
 };
 
 const char *token_name(token *t){
@@ -35,6 +48,16 @@ const char *token_name(token *t){
 		return "<newline>";
 	case T_SPACE:
 		return "<space>";
+	case T_INTEGER:
+		return "<integer>";
+	}
+
+	for(size_t i=0; i<arraylen(keywords); i++){
+		if(keywords[i].type == t->type){
+			static char buf[256];
+			snprintf(buf,sizeof(buf),"<%s>",keywords[i].str);
+			return buf;
+		}
 	}
 
 	for(size_t i=0; i<arraylen(tokens); i++){
@@ -83,25 +106,11 @@ token *next_token(FILE *file){
 		return new;
 	}
 
-	//if blank just extract every blank
-	if(isblank(c)){
-		new->type = T_SPACE;
-		new->value = strdup("");
-		size_t size = 1;
-
-		while(isblank(c)){
-			size++;
-			new->value = realloc(new->value,size);
-			new->value[size-2] = c;
-			new->value[size-1] = '\0';
-			c = fgetc(file);
-		}
-
-		ungetc(c,file);
-		return new;
-	} else {
-		ungetc(c,file);
+	//if blank just skip
+	while(isblank(c) || c == '\n'){
+		c = fgetc(file);
 	}
+	ungetc(c,file);
 
 	int op = get_token(file);
 	if(op < 0){
@@ -121,6 +130,25 @@ token *next_token(FILE *file){
 			new->value[size-1] = '\0';
 		}
 		ungetc(c,file);
+
+		//check : is it a integer or a keyword ?
+		if(isdigit(new->value[0])){
+			//integer
+			char *end;
+			new->type = T_INTEGER;
+			new->integer = strtol(new->value,&end,0);
+			if(end == new->value){
+				error("linker script syntax error : invalid integer");
+				exit(EXIT_FAILURE);
+			}
+		} else {
+			for(size_t i=0; i<arraylen(keywords); i++){
+				if(!strcmp(new->value,keywords[i].str)){
+					new->type = keywords[i].type;
+					break;
+				}
+			}
+		}
 	} else {
 		new->type = tokens[op].type;
 	}
