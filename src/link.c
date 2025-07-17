@@ -18,19 +18,70 @@ int expect(FILE *file,int type){
 	return 0;
 }
 
+unsigned long parse_uint(FILE *file){
+	//TODO : parse complex expression
+	token *tok = next_token(file);
+	if(tok->type != T_INTEGER){
+		destroy_token(tok);
+		syntax_error("expected integer");
+	}
+	unsigned long i = tok->integer;
+	destroy_token(tok);
+	return i;
+}
+
 int parse_sections(tld_state *state){
 	expect(state->script,'{');
+	for(;;){
+		token *tok = next_token(state->script);
+		switch(tok->type){
+		case T_STR:;
+			puts("h");
+			//folowed by : is a section
+			//folowed by = is an symbol
+			//TODO : symbol modification
+			token *next = next_token(state->script);
+			switch(next->type){
+			case ':':
+				//TODO
+				break;
+			case '=':;
+				unsigned long i = parse_uint(state->script);
+				expect(state->script,';');
+				if(!strcmp(tok->value,".")){
+					if(i < state->addr){
+						error(". value cannot go backward");
+						exit(EXIT_FAILURE);
+					}
+					state->addr = i;
+				} else {
+					//TODO : create a symbols
+				}
+				break;
+			default:
+				syntax_error();
+				break;
+			}
+			break;
+		case '}':
+			destroy_token(tok);
+			return 0;
+		}
+		destroy_token(tok);
+	}
 	return 0;
 }
 
 int linking(tld_state *state){
 	for(;;){
 		token *tok = next_token(state->script);
-		printf("%s\n",token_name(tok));
 		switch(tok->type){
 		case T_ENTRY:
 			expect(state->script,'(');
-			expect(state->script,T_STR);
+			token *entry = next_token(state->script);
+			if(entry->type != T_STR)syntax_error();
+			state->entry_name = strdup(entry->value);
+			destroy_token(entry);
 			expect(state->script,')');
 			break;
 		case T_SECTIONS:

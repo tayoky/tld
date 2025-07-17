@@ -31,6 +31,7 @@ struct tok tokens[] = {
 	TOK(T_EQUAL      ,"="),
 	TOK(T_SEMI_COLON ,";"),
 	TOK(T_STAR       ,"*"),
+	TOK(T_TWO_POINT  ,":"),
 };
 
 struct keyword keywords[] = {
@@ -99,18 +100,20 @@ token *next_token(FILE *file){
 	token *new = malloc(sizeof(token));
 	memset(new,0,sizeof(token));
 
-	//if aready at the end return EOF
-	int c = fgetc(file);
-	if(c == EOF){
-		new->type = T_EOF;
-		return new;
-	}
-
 	//if blank just skip
+	int c = fgetc(file);
 	while(isblank(c) || c == '\n'){
 		c = fgetc(file);
 	}
-	ungetc(c,file);
+
+	//if aready at the end return EOF
+	if(c == EOF){
+		new->type = T_EOF;
+		return new;
+	} else {
+		ungetc(c,file);
+	}
+
 
 	int op = get_token(file);
 	if(op < 0){
@@ -152,6 +155,7 @@ token *next_token(FILE *file){
 	} else {
 		new->type = tokens[op].type;
 	}
+	//puts(token_name(new));
 	return new;
 }
 

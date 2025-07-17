@@ -55,6 +55,7 @@ typedef struct token {
 #define T_EQUAL       '='
 #define T_SEMI_COLON  ';'
 #define T_STAR        '*'
+#define T_TWO_POINT   ':'
 #define T_INTEGER     128
 #define T_STR         129
 #define T_SECTIONS    130
