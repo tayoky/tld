@@ -5,40 +5,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define ARCH_I386     1
-#define ARCH_X86_64   2
-#define ARCH_AARCH64  3
-
-#define FORMAT_ELF    1
-#define FORMAT_BINARY 2
-
-typedef struct tld_section {
-	char *name;
-	size_t size;
-	char *data;
-} tld_section;
-
-typedef struct tld_file {
-	FILE *file;
-	int type;
-	size_t sections_count;
-	tld_section *sections;
-} tld_file;
-
-typedef struct tld_state {
-	FILE *script;
-	tld_file *out;
-	int arch;
-	char *entry_name;
-	size_t addr; //the value of the .
-} tld_state;
-
-typedef struct tld_symbol {
-	tld_section *section;
-	size_t offset;
-	size_t size;
-} tld_symbol;
-
 typedef struct token {
 	int type;
 	char *value;
@@ -60,6 +26,41 @@ typedef struct token {
 #define T_STR         129
 #define T_SECTIONS    130
 #define T_ENTRY       131
+
+#define ARCH_I386     1
+#define ARCH_X86_64   2
+#define ARCH_AARCH64  3
+
+#define FORMAT_ELF    1
+#define FORMAT_BINARY 2
+
+typedef struct tld_section {
+	char *name;
+	size_t size;
+	char *data;
+} tld_section;
+
+typedef struct tld_file {
+	FILE *file;
+	int type;
+	size_t sections_count;
+	tld_section *sections;
+} tld_file;
+
+typedef struct tld_symbol {
+	tld_section *section;
+	size_t offset;
+	size_t size;
+} tld_symbol;
+
+typedef struct tld_state {
+	FILE *script;
+	tld_file *out;
+	int arch;
+	char *entry_name;
+	size_t addr; //the value of the .
+	token *unget;
+} tld_state;
 
 token *next_token(FILE *file);
 void destroy_token(token *t);
