@@ -4,7 +4,7 @@
 
 //actual linking
 
-#define syntax_error(str) {error("linker script syntax error");}
+#define syntax_error(str) {error("%s : linker script syntax error at %d",__func__,state->line);}
 
 token *get_token(tld_state *state){
 	if(state->unget){
@@ -12,7 +12,7 @@ token *get_token(tld_state *state){
 		state->unget = NULL;
 		return tok;
 	}
-	return next_token(state->script);
+	return next_token(state);
 }
 
 void unget_token(tld_state *state,token *tok){
@@ -59,7 +59,24 @@ int parse_symbol(tld_state *state,const char *name){
 	return 0;
 }
 
+static void parse_input_section(tld_state *state,const char *name,const char *output){
+	expect(state,'(');
+	token *tok = get_token(state);
+	while(tok->type != ')'){
+		if(tok->type != T_STR){
+			syntax_error("expected closing ')'");
+			exit(EXIT_FAILURE);
+		}
+		destroy_token(tok);
+		tok = get_token(state);
+	}
+	destroy_token(tok);
+}
+
 int parse_output_section(tld_state *state,const char *name){
+	state->out->sections = realloc(state->out->sections,(state->out->sections_count++) * sizeof(tld_section));
+	memset(&state->out->sections[state->out->sections_count-1],0,sizeof(tld_section));
+	state->out->sections[state->out->sections_count-1].name = strdup(name);
 	token *tok = get_token(state);
 	if(tok->type != ':' && tok->type != '('){
 		//address
@@ -89,9 +106,12 @@ int parse_output_section(tld_state *state,const char *name){
 			case '=':;
 				parse_symbol(state,tok->value);
 				break;
-			default:
-				
+			case '(':
+				parse_input_section(state,tok->value,name);
 				break;
+			default:
+				syntax_error("expected input section description");
+				exit(EXIT_FAILURE);
 			}
 			break;
 		case '}':

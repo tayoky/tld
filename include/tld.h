@@ -62,9 +62,10 @@ typedef struct tld_state {
 	char *entry_name;
 	size_t addr; //the value of the .
 	token *unget;
+	int line;
 } tld_state;
 
-token *next_token(FILE *file);
+token *next_token(tld_state *);
 void destroy_token(token *t);
 const char *token_name(token *t);
 void error(const char *fmt,...);

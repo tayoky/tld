@@ -96,14 +96,15 @@ static int get_token(FILE *file){
 }
 
 
-token *next_token(FILE *file){
+token *next_token(tld_state *state){
 	token *new = malloc(sizeof(token));
 	memset(new,0,sizeof(token));
 
 	//if blank just skip
-	int c = fgetc(file);
+	int c = fgetc(state->script);
 	while(isblank(c) || c == '\n'){
-		c = fgetc(file);
+		if(c == '\n')state->line++;
+		c = fgetc(state->script);
 	}
 
 	//if aready at the end return EOF
@@ -111,17 +112,17 @@ token *next_token(FILE *file){
 		new->type = T_EOF;
 		return new;
 	} else {
-		ungetc(c,file);
+		ungetc(c,state->script);
 	}
 
 
-	int op = get_token(file);
+	int op = get_token(state->script);
 	if(op < 0){
 		new->type = T_STR;
 		new->value = strdup("");
 		size_t size = 1;
 		int c;
-		while((c = fgetc(file)) != EOF){
+		while((c = fgetc(state->script)) != EOF){
 			if(isblank(c))b: break;
 			//check if we are at the start of a new op
 			for(size_t i=0; i<arraylen(tokens); i++){
@@ -132,7 +133,7 @@ token *next_token(FILE *file){
 			new->value[size-2] = c;
 			new->value[size-1] = '\0';
 		}
-		ungetc(c,file);
+		ungetc(c,state->script);
 
 		//check : is it a integer or a keyword ?
 		if(isdigit(new->value[0])){
