@@ -49,7 +49,17 @@ option options[] = {
 void parse_arg(tld_state *state,int argc,char **argv){
 	int i=1;
 	for(;i<argc;i++){
-		if(argv[i][0] != '-')continue;
+		if(argv[i][0] != '-'){
+			tld_file *file = tld_open_file(argv[i],"r");
+			if(!file){
+				perror(argv[i]);
+				exit(EXIT_FAILURE);
+			}
+			state->in = realloc(state->in,(state->in_count++)*sizeof(FILE*));
+			state->in[state->in_count-1] = file;
+			continue;
+		}
+
 		if(!strcmp(argv[i],"--")){
 			i++;
 			break;
@@ -84,6 +94,8 @@ void parse_arg(tld_state *state,int argc,char **argv){
 							exit(EXIT_FAILURE);
 						}
 						options[j].func(state,argv[i+1]);
+						i++;
+						goto finish_long;
 					}
 					goto finish_short;
 				}
@@ -103,11 +115,18 @@ int main(int argc,char **argv){
 	memset(&state,0,sizeof(state));
 	parse_arg(&state,argc,argv);
 
-	//default value
+	//default values
 	if(!state.out){
 		state.out = tld_open_file("a.out","w");
 		if(!state.out){
 			perror("a.out");
+			exit(EXIT_FAILURE);
+		}
+	}
+	if(!state.script){
+		state.script = fopen(PREFIX"/lib/tld/default.ld","r");
+		if(!state.script){
+			perror("can't open default linker script");
 			exit(EXIT_FAILURE);
 		}
 	}

@@ -16,7 +16,7 @@ OPT=""
 
 for i in "$@"; do
 	case $i in
-		--with-sysroot=*)
+		--with-sysroot=*|--sysroot=*)
 			SYSROOT="${i#*=}"
 			shift # past argument=value
 			;;
@@ -35,10 +35,6 @@ for i in "$@"; do
 		--prefix=*)
 			PREFIX="${i#*=}"
 			shift # past argument=value
-			;;
-		--no-termios)
-			OPT="-DNO_TERMIOS $OPT"
-			shift
 			;;
 		--debug)
 			OPT="-DDEBUG $OPT"
@@ -78,3 +74,4 @@ echo "HOST=$HOST" >> config.mk
 echo "PREFIX=$PREFIX" >> config.mk
 echo "CC=$CC" >> config.mk
 echo "CFLAGS=$CFLAGS $OPT" >> config.mk
+echo "SYSROOT=$SYSROOT"  >> config.mk

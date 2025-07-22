@@ -56,6 +56,8 @@ typedef struct tld_symbol {
 typedef struct tld_state {
 	FILE *script;
 	tld_file *out;
+	tld_file **in;
+	size_t in_count;
 	int arch;
 	char *entry_name;
 	size_t addr; //the value of the .
@@ -69,6 +71,7 @@ void error(const char *fmt,...);
 
 tld_file *tld_open_file(const char *path,const char *mode);
 void tld_close_file(tld_file *file);
+int elf_load(tld_file *file);
 
 int linking(tld_state *state);
 

@@ -3,6 +3,7 @@ include config.mk
 BUILDDIR   = build
 SRCDIR     = src
 INCLUDEDIR = include
+LDDIR      = scripts
 
 VERSION = $(shell git describe --tags --always)
 
@@ -10,6 +11,7 @@ SRC = $(shell find $(SRCDIR) -name "*.c")
 OBJ = $(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 
 CFLAGS += -I$(INCLUDEDIR)
+CFLAGS += -DHOST='"$(HOST)"' -DPREFIX='"$(PREFIX)"' -DSYSROOT='"$(SYSROOT)"'
 
 all : $(BUILDDIR)/tld
 
@@ -29,11 +31,11 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 
 install : all
 	@echo '[installing tld]'
-	@mkdir -p $(PREFIX)/bin
+	@mkdir -p $(PREFIX)/bin $(PREFIX)/lib/tld/
 	@cp $(BUILDDIR)/tld $(PREFIX)/bin/tld
-
+	@cp $(LDDIR)/*.ld $(PREFIX)/lib/tld
 uninstall :
-	rm -f $(PREFIX)/lib/tld
+	rm -rf $(PREFIX)/bin/tld $(PREFIX)/lib/tld
 
 clean :
 	rm -fr build
