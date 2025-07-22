@@ -60,6 +60,7 @@ int parse_symbol(tld_state *state,const char *name){
 }
 
 static void parse_input_section(tld_state *state,const char *name,const char *output){
+	printf("add section of %s in %s\n",name,output);
 	expect(state,'(');
 	token *tok = get_token(state);
 	while(tok->type != ')'){
@@ -74,6 +75,7 @@ static void parse_input_section(tld_state *state,const char *name,const char *ou
 }
 
 int parse_output_section(tld_state *state,const char *name){
+	printf("parse output section %s\n",name);
 	state->out->sections = realloc(state->out->sections,(state->out->sections_count++) * sizeof(tld_section));
 	memset(&state->out->sections[state->out->sections_count-1],0,sizeof(tld_section));
 	state->out->sections[state->out->sections_count-1].name = strdup(name);
@@ -96,14 +98,13 @@ int parse_output_section(tld_state *state,const char *name){
 		token *tok = get_token(state);
 		switch(tok->type){
 		case T_STR:;
-			puts("h");
 			//folowed by = is an symbol
 			//folowed by anything else is an input section
 			//TODO : symbol modification
 			token *next = get_token(state);
 			unget_token(state,next);
 			switch(next->type){
-			case '=':;
+			case '=':
 				parse_symbol(state,tok->value);
 				break;
 			case '(':
@@ -130,14 +131,13 @@ int parse_sections(tld_state *state){
 		token *tok = get_token(state);
 		switch(tok->type){
 		case T_STR:;
-			puts("h");
 			//folowed by = is an symbol
 			//folowed by anything else is an output section
 			//TODO : symbol modification
 			token *next = get_token(state);
 			unget_token(state,next);
 			switch(next->type){
-			case '=':;
+			case '=':
 				parse_symbol(state,tok->value);
 				break;
 			default:
@@ -155,6 +155,7 @@ int parse_sections(tld_state *state){
 }
 
 int linking(tld_state *state){
+	state->line = 1;
 	for(;;){
 		token *tok = get_token(state);
 		switch(tok->type){

@@ -30,7 +30,6 @@ struct tok tokens[] = {
 	TOK(T_CLOSE_PAREN,")"),
 	TOK(T_EQUAL      ,"="),
 	TOK(T_SEMI_COLON ,";"),
-	TOK(T_STAR       ,"*"),
 	TOK(T_TWO_POINT  ,":"),
 };
 
