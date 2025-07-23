@@ -22,6 +22,7 @@ typedef struct token {
 #define T_EQUAL       '='
 #define T_SEMI_COLON  ';'
 #define T_STAR        '*'
+#define T_SLASH       '/'
 #define T_TWO_POINT   ':'
 #define T_PLUS        '+'
 #define T_MINUS       '-'
@@ -33,6 +34,8 @@ typedef struct token {
 #define T_TARGET      132
 #define T_ALIGN       133
 #define T_BLOCK       134
+#define T_COM_START   135
+#define T_COM_END     136
 
 #define ARCH_I386     1
 #define ARCH_X86_64   2
@@ -57,8 +60,8 @@ typedef struct tld_symbol {
 } tld_symbol;
 
 #define TLD_SYM_UNDEF  0x01
-#define TLD_SYM_WEAL   0x02
-#define TLD_SYM_GLOBAL 0x04
+#define TLD_SYM_WEAK   0x02
+#define TLD_SYM_LOCAL  0x04
 #define TLD_SYM_IGNORE 0x08
 
 typedef struct tld_file {

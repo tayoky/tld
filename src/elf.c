@@ -108,9 +108,9 @@ int elf64_save(tld_file *file,int arch){
 	header.e_phnum = file->sections_count + 1;
 	header.e_phoff = sizeof(header);
 	header.e_shentsize = sizeof(Elf_Shdr);
-	header.e_shnum = file->sections_count + 2;
+	header.e_shnum = file->sections_count + 3;
 	header.e_shoff = sizeof(header) + sizeof(Elf_Phdr) * (file->sections_count + 1);
-	header.e_shstrndx = file->sections_count + 1;
+	header.e_shstrndx = file->sections_count + 2;
 	if(!fwrite(&header,sizeof(header),1,file->file))return -1;
 
 
@@ -119,7 +119,7 @@ int elf64_save(tld_file *file,int arch){
 	size_t strtab_len = 1;
 
 	//write phdr
-	off_t offset = sizeof(header) + (sizeof(Elf_Phdr) + sizeof(Elf_Shdr)) * (file->sections_count + 1 ) + sizeof(Elf_Shdr);
+	off_t offset = sizeof(header) + (sizeof(Elf_Phdr) + sizeof(Elf_Shdr)) * (file->sections_count + 1 ) + sizeof(Elf_Shdr) * 2;
 	Elf_Phdr pheader;
 	memset(&pheader,0,sizeof(pheader));
 	fwrite(&pheader,sizeof(pheader),1,file->file);
@@ -135,13 +135,14 @@ int elf64_save(tld_file *file,int arch){
 	}
 
 	//write shdr
-	offset = sizeof(header) + (sizeof(Elf_Phdr) + sizeof(Elf_Shdr)) * (file->sections_count + 1 ) + sizeof(Elf_Shdr);
+	offset = sizeof(header) + (sizeof(Elf_Phdr) + sizeof(Elf_Shdr)) * (file->sections_count + 1 ) + sizeof(Elf_Shdr) * 2;
 	Elf_Shdr sheader;
 	memset(&sheader,0,sizeof(sheader));
 	fwrite(&sheader,sizeof(sheader),1,file->file);
 	for(size_t i=0; i<file->sections_count; i++){
 		Elf_Shdr sheader;
 		memset(&sheader,0,sizeof(sheader));
+		sheader.sh_type = SHT_PROGBITS;
 		sheader.sh_size = file->sections[i].size;
 		sheader.sh_name = strtab_len;
 		add_string(file->sections[i].name);
@@ -150,7 +151,44 @@ int elf64_save(tld_file *file,int arch){
 		fwrite(&sheader,sizeof(sheader),1,file->file);
 	}
 
+	//write symtab header
+	memset(&sheader,0,sizeof(sheader));
+	sheader.sh_type = SHT_SYMTAB;
+	sheader.sh_offset = offset;
+	sheader.sh_info = 1024;
+	sheader.sh_name = strtab_len;
+	sheader.sh_link = header.e_shstrndx,
+	add_string(".symtab");
+	sheader.sh_size = (file->symbols_count + 1) * sizeof(Elf_Sym);
+	offset += (file->symbols_count + 1)* sizeof(Elf_Sym);
+	fwrite(&sheader,sizeof(sheader),1,file->file);
+
+	//write stub strtab
+	fwrite(&sheader,sizeof(sheader),1,file->file);
+
+	//write sections
+	for(size_t i=0; i<file->sections_count; i++){
+		fwrite(file->sections[i].data,file->sections[i].size,1,file->file);
+	}
+
+	//write symtab content
+	Elf_Sym sym = {
+		.st_shndx = SHN_UNDEF,
+	};
+	fwrite(&sym,sizeof(sym),1,file->file);
+	for(size_t i=0; i<file->symbols_count; i++){
+		Elf_Sym sym = {
+			.st_name = strtab_len,
+			.st_value = file->symbols[i].offset,
+			.st_size  = file->symbols[i].size,
+			.st_shndx = 0/*(file->symbols[i].section - file->sections) / sizeof(tld_section) + 1,*/
+		};
+		add_string(file->symbols[i].name);
+		fwrite(&sym,sizeof(sym),1,file->file);
+	}
+
 	//write strtab header
+	fseek(file->file,header.e_shoff + header.e_shentsize * header.e_shstrndx,SEEK_SET);
 	memset(&sheader,0,sizeof(sheader));
 	sheader.sh_type = SHT_STRTAB;
 	sheader.sh_offset = offset;
@@ -159,13 +197,10 @@ int elf64_save(tld_file *file,int arch){
 	sheader.sh_size = strtab_len;
 	fwrite(&sheader,sizeof(sheader),1,file->file);
 
-	//write sections
-	for(size_t i=0; i<file->sections_count; i++){
-		fwrite(file->sections[i].data,file->sections[i].size,1,file->file);
-	}
-
 	//write strtab content
+	fseek(file->file,offset,SEEK_SET);
 	fwrite(strtab,strtab_len,1,file->file);
+
 	return 0;
 }
 

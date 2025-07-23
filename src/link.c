@@ -12,7 +12,18 @@ token *get_token(tld_state *state){
 		state->unget = NULL;
 		return tok;
 	}
-	return next_token(state);
+	token *tok = next_token(state);
+	if(tok->type == T_COM_START){
+		while(tok->type != T_COM_END){
+			destroy_token(tok);
+			tok = next_token(state);
+			if(tok->type == T_EOF){
+				syntax_error("expect */");
+				exit(EXIT_FAILURE);
+			}
+		}
+	}
+	return tok;
 }
 
 void unget_token(tld_state *state,token *tok){
@@ -60,6 +71,22 @@ static unsigned long parse_simple_uint(tld_state *state){
 		i = tok->integer;
 		destroy_token(tok);
 		return i;
+	case T_STR:
+		//get symbol value
+		if(!strcmp(tok->value,".")){
+			destroy_token(tok);
+			return state->addr;
+		}
+		//TODO : get symbols value
+		break;
+	case T_ALIGN:
+	case T_BLOCK:
+		destroy_token(tok);
+		expect(state,'(');
+		i = parse_uint(state);
+		expect(state,')');
+		//TODO :check if a power of 2
+		return (state->addr + i - 1) & ~(i-1);
 	case '(':
 		destroy_token(tok);
 		i = parse_uint(state);
@@ -71,7 +98,7 @@ static unsigned long parse_simple_uint(tld_state *state){
 		exit(EXIT_FAILURE);
 	}
 	destroy_token(tok);
-
+	return 0;
 }
 
 
@@ -96,6 +123,30 @@ unsigned long parse_uint(tld_state *state){
 	return i;
 }
 
+static tld_symbol *create_symbol(tld_file *file,const char *name){
+	//first let see if it already exist
+	for(size_t i=0; i<file->symbols_count; i++){
+		if(!strcmp(name,file->symbols[i].name)){
+			//it exist but if it is a week symbols
+			//we can replace it
+			if(file->symbols[i].flags & TLD_SYM_WEAK){
+				return &file->symbols[i];
+			} else {
+				error("redefinition of symbol %s\n",name);
+				//maybee exit ?
+				return &file->symbols[i];
+			}
+		}
+	}
+
+	//it don't exist
+	//make some place
+	file->symbols = realloc(file->symbols,(file->symbols_count+1) * sizeof(tld_symbol));
+	tld_symbol *sym = memset(&file->symbols[file->symbols_count++],0,sizeof(tld_symbol));
+	sym->name = strdup(name);
+	return sym;
+}
+
 int parse_symbol(tld_state *state,const char *name){
 	expect(state,'=');
 	unsigned long i = parse_uint(state);
@@ -108,6 +159,10 @@ int parse_symbol(tld_state *state,const char *name){
 		state->addr = i;
 	} else {
 		//TODO : create a symbols
+		tld_symbol *sym = create_symbol(state->out,name);
+		sym->offset = i;
+		sym->size = 0;
+		sym->flags = 0;
 	}
 	return 0;
 }

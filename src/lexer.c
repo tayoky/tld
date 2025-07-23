@@ -23,6 +23,8 @@ struct keyword {
 
 //must be from bigger to smaller
 struct tok tokens[] = {
+	//TOK(T_COM_START  ,"/*"),
+	//TOK(T_COM_END    ,"*/"),
 	TOK(T_NEWLINE    ,"\n"),
 	TOK(T_OPEN_BRACK ,"{"),
 	TOK(T_CLOSE_BRACK,"}"),
@@ -33,6 +35,8 @@ struct tok tokens[] = {
 	TOK(T_TWO_POINT  ,":"),
 	TOK(T_PLUS       ,"+"),
 	TOK(T_MINUS      ,"-"),
+	//TOK(T_SLASH      ,"/"),
+	//TOK(T_STAR       ,"*"),
 };
 
 struct keyword keywords[] = {
@@ -149,6 +153,14 @@ token *next_token(tld_state *state){
 			if(end == new->value){
 				error("linker script syntax error : invalid integer");
 				exit(EXIT_FAILURE);
+			}
+			switch(*end){
+			case 'K':
+				new->integer *= 1024;
+				break;
+			case 'M':
+				new->integer *= 1024 * 1024;
+				break;
 			}
 		} else {
 			for(size_t i=0; i<arraylen(keywords); i++){
