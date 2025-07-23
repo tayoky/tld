@@ -45,6 +45,7 @@ typedef struct tld_file {
 	int type;
 	size_t sections_count;
 	tld_section *sections;
+	char *name;
 } tld_file;
 
 typedef struct tld_symbol {
@@ -75,6 +76,9 @@ void tld_close_file(tld_file *file);
 int elf_load(tld_file *file);
 
 int linking(tld_state *state);
+
+int glob_match(const char *patern,const char *str);
+int glob_path_match(const char *patern,const char *str);
 
 #define arraylen(array) (sizeof(array)/sizeof(*array))
 

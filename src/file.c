@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <libgen.h>
 #include "elf.h"
 #include "tld.h"
 
@@ -25,9 +26,17 @@ tld_file *tld_open_file(const char *path,const char *mode){
 			}
 		} else {
 			//binary file
+			file->sections = malloc(sizeof(tld_section));
+			fseek(fd,0,SEEK_SET);
+			file->sections[0].size = ftell(fd);
+			rewind(fd);
+			file->sections[0].data = malloc(file->sections[0].size);
+			fread(file->sections[0].data,file->sections[0].size,0,fd);
+			file->sections[0].name = strdup(".bin");
 		}
 		rewind(fd);
 	}
+	file->name = strdup(path);
 	return file;
 error:
 	fclose(fd);

@@ -59,24 +59,51 @@ int parse_symbol(tld_state *state,const char *name){
 	return 0;
 }
 
-static void parse_input_section(tld_state *state,const char *name,const char *output){
-	printf("add section of %s in %s\n",name,output);
+static void append_section(tld_state *state,tld_section *input,tld_section *output){
+	//TODO : append symbols and relocations too
+	output->data = realloc(output->data,output->size + input->size);
+	memcpy(&output->data[output->size],input->data,input->size);
+	output->size += input->size;
+}
+
+static void parse_input_section(tld_state *state,const char *input,int output){
+	printf("add section of %s in %d\n",input,output);
 	expect(state,'(');
+	size_t sec_count = 0;
+	char **sec = NULL;
 	token *tok = get_token(state);
 	while(tok->type != ')'){
 		if(tok->type != T_STR){
 			syntax_error("expected closing ')'");
 			exit(EXIT_FAILURE);
 		}
+		sec = realloc(sec,sizeof(char*)*(++sec_count));
+		sec[sec_count-1] = strdup(tok->value);
 		destroy_token(tok);
 		tok = get_token(state);
 	}
 	destroy_token(tok);
+
+	for(size_t i=0; i<state->in_count; i++){
+		if(!glob_path_match(input,state->in[i]->name))continue;
+		for(size_t j=0; j<sec_count; j++){
+			for(size_t k=0; k<state->in[i]->sections_count; k++){
+				if(!glob_match(sec[j],state->in[i]->sections[k].name))continue;
+				append_section(state,&state->in[i]->sections[k],&state->out->sections[output-1]);
+				printf("add %s of %s\n",state->in[i]->sections[k].name,state->in[i]->name);
+			}
+		}
+	}
+
+	for(size_t i=0; i<sec_count; i++){
+		free(sec[i]);
+	}
+	free(sec);
 }
 
 int parse_output_section(tld_state *state,const char *name){
 	printf("parse output section %s\n",name);
-	state->out->sections = realloc(state->out->sections,(state->out->sections_count++) * sizeof(tld_section));
+	state->out->sections = realloc(state->out->sections,(++state->out->sections_count) * sizeof(tld_section));
 	memset(&state->out->sections[state->out->sections_count-1],0,sizeof(tld_section));
 	state->out->sections[state->out->sections_count-1].name = strdup(name);
 	token *tok = get_token(state);
@@ -108,7 +135,7 @@ int parse_output_section(tld_state *state,const char *name){
 				parse_symbol(state,tok->value);
 				break;
 			case '(':
-				parse_input_section(state,tok->value,name);
+				parse_input_section(state,tok->value,state->out->sections_count);
 				break;
 			default:
 				syntax_error("expected input section description");

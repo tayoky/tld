@@ -55,7 +55,7 @@ void parse_arg(tld_state *state,int argc,char **argv){
 				perror(argv[i]);
 				exit(EXIT_FAILURE);
 			}
-			state->in = realloc(state->in,(state->in_count++)*sizeof(FILE*));
+			state->in = realloc(state->in,(++state->in_count)*sizeof(tld_file*));
 			state->in[state->in_count-1] = file;
 			continue;
 		}
