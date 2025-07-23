@@ -31,15 +31,68 @@ int expect(tld_state *state,int type){
 	return 0;
 }
 
-unsigned long parse_uint(tld_state *state){
-	//TODO : parse complex expression
+int get_op_level(token *op){
+	static int ops[5][5] = {
+		//higger
+		{'!','~',0},
+		{'*','/','%',0},
+		{'+','-',0},
+		{'&',0},
+		{'|',0},
+		//lower
+	};
+	for(int i = 0; i<arraylen(ops); i++){
+		for(int j=0;ops[i][j]; j++){
+			if(op->type == ops[i][j]){
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+unsigned long parse_uint(tld_state *state);
+
+static unsigned long parse_simple_uint(tld_state *state){
+	unsigned long i;
 	token *tok = get_token(state);
-	if(tok->type != T_INTEGER){
+	switch(tok->type){
+	case T_INTEGER:
+		i = tok->integer;
+		destroy_token(tok);
+		return i;
+	case '(':
+		destroy_token(tok);
+		i = parse_uint(state);
+		expect(state,')');
+		return i;
+	default:
 		destroy_token(tok);
 		syntax_error("expected integer");
+		exit(EXIT_FAILURE);
 	}
-	unsigned long i = tok->integer;
 	destroy_token(tok);
+
+}
+
+
+unsigned long parse_uint(tld_state *state){
+	//TODO : parse complex expression
+	unsigned long i = parse_simple_uint(state);
+	for(;;){
+		token *op = get_token(state);
+		switch(op->type){
+		case '+':
+			i += parse_simple_uint(state);
+			break;
+		case '-':
+			i -= parse_simple_uint(state);
+			break;
+		default:
+			unget_token(state,op);
+			return i;
+		}
+		destroy_token(op);
+	}
 	return i;
 }
 
@@ -118,6 +171,7 @@ int parse_output_section(tld_state *state,const char *name){
 		state->addr = addr;
 		tok = get_token(state);
 	}
+	state->out->sections[state->out->sections_count-1].address = state->addr;
 	unget_token(state,tok);
 	expect(state,':');
 	expect(state,'{');
@@ -144,11 +198,12 @@ int parse_output_section(tld_state *state,const char *name){
 			break;
 		case '}':
 			destroy_token(tok);
-			return 0;
+			goto ret;
 		}
 		destroy_token(tok);
 	}	
-
+ret:
+	state->addr += state->out->sections[state->out->sections_count-1].size;
 	return 0;
 }
 

@@ -31,11 +31,17 @@ struct tok tokens[] = {
 	TOK(T_EQUAL      ,"="),
 	TOK(T_SEMI_COLON ,";"),
 	TOK(T_TWO_POINT  ,":"),
+	TOK(T_PLUS       ,"+"),
+	TOK(T_MINUS      ,"-"),
 };
 
 struct keyword keywords[] = {
 	KEYWORD(T_SECTIONS,"SECTIONS"),
 	KEYWORD(T_ENTRY   ,"ENTRY"),
+	KEYWORD(T_PHDR    ,"PHDR"),
+	KEYWORD(T_TARGET  ,"TARGET"),
+	KEYWORD(T_ALIGN   ,"ALIGN"),
+	KEYWORD(T_BLOCK   ,"BLOCK"),
 };
 
 const char *token_name(token *t){

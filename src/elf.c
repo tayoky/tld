@@ -64,6 +64,7 @@ int elf64_save(tld_file *file,int arch){
 	header.e_ident[EI_VERSION] = EV_CURRENT;
 	header.e_ident[EI_CLASS]   = ELFCLASS64;
 	header.e_ehsize = sizeof(header);
+	header.e_type = ET_EXEC;
 	header.e_phentsize = sizeof(Elf_Phdr);
 	header.e_phnum = file->sections_count + 1;
 	header.e_phoff = sizeof(header);
@@ -89,6 +90,7 @@ int elf64_save(tld_file *file,int arch){
 		pheader.p_memsz = file->sections[i].size;
 		pheader.p_filesz = pheader.p_memsz;
 		pheader.p_offset = offset;
+		pheader.p_vaddr = file->sections[i].address;
 		offset += pheader.p_filesz;
 		fwrite(&pheader,sizeof(pheader),1,file->file);
 	}

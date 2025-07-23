@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdint.h>
 
 typedef struct token {
 	int type;
@@ -22,10 +23,16 @@ typedef struct token {
 #define T_SEMI_COLON  ';'
 #define T_STAR        '*'
 #define T_TWO_POINT   ':'
+#define T_PLUS        '+'
+#define T_MINUS       '-'
 #define T_INTEGER     128
 #define T_STR         129
 #define T_SECTIONS    130
 #define T_ENTRY       131
+#define T_PHDR        132
+#define T_TARGET      132
+#define T_ALIGN       133
+#define T_BLOCK       134
 
 #define ARCH_I386     1
 #define ARCH_X86_64   2
@@ -38,6 +45,7 @@ typedef struct tld_section {
 	char *name;
 	size_t size;
 	char *data;
+	uintptr_t address;
 } tld_section;
 
 typedef struct tld_symbol {
