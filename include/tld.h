@@ -49,10 +49,17 @@ typedef struct tld_section {
 } tld_section;
 
 typedef struct tld_symbol {
+	char *name;
 	tld_section *section;
 	size_t offset;
 	size_t size;
+	int flags;
 } tld_symbol;
+
+#define TLD_SYM_UNDEF  0x01
+#define TLD_SYM_WEAL   0x02
+#define TLD_SYM_GLOBAL 0x04
+#define TLD_SYM_IGNORE 0x08
 
 typedef struct tld_file {
 	FILE *file;

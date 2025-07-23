@@ -8,7 +8,8 @@
 #define _TYPEDEF(bits,suffix) typedef Elf##bits##_##suffix Elf_##suffix;
 #define TYPEDEF(bits) _TYPEDEF(bits,Ehdr)\
 	_TYPEDEF(bits,Shdr)\
-	_TYPEDEF(bits,Phdr)
+	_TYPEDEF(bits,Phdr)\
+	_TYPEDEF(bits,Sym)
 
 TYPEDEF(64)
 
@@ -30,11 +31,11 @@ int elf64_load(tld_file *file){
 	if(fseek(file->file,shstrtab_header.sh_offset,SEEK_SET) < 0)return -1;
 	if(!fread(shstrtab,shstrtab_header.sh_size,1,file->file))return -1;
 
-	file->sections_count = header.e_shnum - 1;
+	file->sections_count = header.e_shnum;
 	file->sections = calloc(file->sections_count,sizeof(tld_section));
 
 	for(size_t i=0; i<file->sections_count; i++){
-		if(fseek(file->file,header.e_shoff + header.e_shentsize * (i + 1),SEEK_SET) < 0)return -1;
+		if(fseek(file->file,header.e_shoff + header.e_shentsize * i,SEEK_SET) < 0)return -1;
 		Elf_Shdr sheader;
 		if(!fread(&sheader,sizeof(sheader),1,file->file)){
 			free(shstrtab);
@@ -46,7 +47,45 @@ int elf64_load(tld_file *file){
 		file->sections[i].data = malloc(sheader.sh_size);
 		fseek(file->file,sheader.sh_offset,SEEK_SET);
 		fread(file->sections[i].data,sheader.sh_size,1,file->file);
+		switch(sheader.sh_type){
+		case SHT_SYMTAB:
+			fseek(file->file,header.e_shoff + header.e_shentsize * sheader.sh_link,SEEK_SET);
+			Elf_Shdr strtab_hdr;
+			fread(&strtab_hdr,sizeof(strtab_hdr),1,file->file);
+			char *strtab = malloc(strtab_hdr.sh_size);
+			fseek(file->file,strtab_hdr.sh_offset,SEEK_SET);
+			fread(strtab,strtab_hdr.sh_size,1,file->file);
 
+			file->symbols = realloc(file->symbols,(file->symbols_count + sheader.sh_size/sizeof(Elf_Sym)) * sizeof(tld_symbol));
+			memset(&file->symbols[file->symbols_count],0,sheader.sh_size/sizeof(Elf_Sym) * sizeof(tld_symbol));
+			Elf_Sym *symbols = (Elf_Sym *)file->sections[i].data;
+			for(size_t j=0; j < sheader.sh_size/sizeof(Elf_Sym); j++){
+				file->symbols[file->symbols_count+j].name = strdup(strtab+symbols[j].st_name);
+				file->symbols[file->symbols_count+j].offset = symbols[j].st_value;
+				file->symbols[file->symbols_count+j].size = symbols[j].st_size;
+				//TODO : symbol type/binding
+				if(symbols[j].st_shndx <= SHN_UNDEF){
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_UNDEF;
+					continue;
+				}
+				if(symbols[j].st_shndx >= SHN_LOPROC){
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_IGNORE;
+					continue;
+				}
+				file->symbols[file->symbols_count+j].section = &file->sections[symbols[j].st_shndx];
+			}
+			file->symbols_count += sheader.sh_size/sizeof(Elf_Sym);
+			free(strtab);
+		}
+
+	}
+	for(size_t i=0; i<file->symbols_count; i++){
+		if(file->symbols[i].flags & TLD_SYM_IGNORE)continue;
+		if(file->symbols[i].flags & TLD_SYM_UNDEF){
+			printf("find undefined symbol %s\n",file->symbols[i].name);
+		} else {
+			printf("find symbol %s in %s\n",file->symbols[i].name,file->symbols[i].section->name);
+		}
 	}
 	return 0;
 }
