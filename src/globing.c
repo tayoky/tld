@@ -9,11 +9,11 @@ int glob_match(const char *patern,const char *str){
 }
 
 int glob_path_match(const char *patern,const char *str){
-	if(strchr(str,'/')){
+	if(strchr(patern,'/')){
 		return glob_match(patern,str);
 	}
 
-	char d[strlen(str+1)];
+	char d[strlen(str)+1];
 	strcpy(d,str);
 	return glob_match(patern,basename(d));
 }

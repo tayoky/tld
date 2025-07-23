@@ -31,7 +31,7 @@ typedef struct token {
 #define ARCH_X86_64   2
 #define ARCH_AARCH64  3
 
-#define FORMAT_ELF    1
+#define FORMAT_ELF64  1
 #define FORMAT_BINARY 2
 
 typedef struct tld_section {
@@ -40,19 +40,21 @@ typedef struct tld_section {
 	char *data;
 } tld_section;
 
+typedef struct tld_symbol {
+	tld_section *section;
+	size_t offset;
+	size_t size;
+} tld_symbol;
+
 typedef struct tld_file {
 	FILE *file;
 	int type;
 	size_t sections_count;
 	tld_section *sections;
 	char *name;
+	size_t symbols_count;
+	tld_symbol *symbols;
 } tld_file;
-
-typedef struct tld_symbol {
-	tld_section *section;
-	size_t offset;
-	size_t size;
-} tld_symbol;
 
 typedef struct tld_state {
 	FILE *script;
@@ -64,7 +66,10 @@ typedef struct tld_state {
 	size_t addr; //the value of the .
 	token *unget;
 	int line;
+	int flags;
 } tld_state;
+
+#define FLAG_R 0x01
 
 token *next_token(tld_state *);
 void destroy_token(token *t);
@@ -72,8 +77,10 @@ const char *token_name(token *t);
 void error(const char *fmt,...);
 
 tld_file *tld_open_file(const char *path,const char *mode);
+int tld_save_file(tld_file *file,int format,int arch);
 void tld_close_file(tld_file *file);
 int elf_load(tld_file *file);
+int elf64_save(tld_file *file,int arch);
 
 int linking(tld_state *state);
 

@@ -131,5 +131,9 @@ int main(int argc,char **argv){
 		}
 	}
 	linking(&state);
+	if(tld_save_file(state.out,FORMAT_ELF64,ARCH_AARCH64) < 0){
+		perror(state.out->name);
+		return EXIT_FAILURE;
+	}
 	return 0;
 }

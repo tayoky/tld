@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include <libgen.h>
 #include "elf.h"
 #include "tld.h"
@@ -45,7 +46,24 @@ error:
 }
 
 void tld_close_file(tld_file *file){
-	//TODO : write the sections
+	for(size_t i=0; i<file->sections_count; i++){
+		free(file->sections[i].name);
+		free(file->sections[i].data);
+	}
+	free(file->name);
+	free(file->sections);
+	free(file->symbols);
 	fclose(file->file);
 	free(file);
+}
+
+int tld_save_file(tld_file *file,int format,int arch){
+	switch(format){
+	case FORMAT_ELF64:
+		return elf64_save(file,arch);
+	default:
+		errno = EINVAL;
+		return -1;
+	}
+	return 0;
 }
