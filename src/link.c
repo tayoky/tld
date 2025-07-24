@@ -125,6 +125,8 @@ unsigned long parse_uint(tld_state *state){
 
 static tld_symbol *create_symbol(tld_file *file,const char *name){
 	//first let see if it already exist
+	//NOTE: skip test if name is null
+	if(name[0])
 	for(size_t i=0; i<file->symbols_count; i++){
 		if(!strcmp(name,file->symbols[i].name)){
 			//it exist but if it is a week symbols
@@ -132,7 +134,7 @@ static tld_symbol *create_symbol(tld_file *file,const char *name){
 			if(file->symbols[i].flags & TLD_SYM_WEAK){
 				return &file->symbols[i];
 			} else {
-				error("redefinition of symbol %s\n",name);
+				error("redefinition of symbol %s",name);
 				//maybee exit ?
 				return &file->symbols[i];
 			}

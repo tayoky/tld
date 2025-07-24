@@ -50,11 +50,20 @@ typedef struct token {
 #define FORMAT_ELF32  2
 #define FORMAT_BINARY 3
 
+typedef struct tld_reloc {
+	struct tld_symbol *symbol;
+	size_t addend;
+	size_t offset;
+	int type;
+} tld_reloc;
+
 typedef struct tld_section {
 	char *name;
 	size_t size;
 	char *data;
 	uintptr_t address;
+	size_t relocs_count;
+	tld_reloc *relocs;
 } tld_section;
 
 typedef struct tld_symbol {
@@ -76,12 +85,6 @@ typedef struct tld_symbol {
 #define TLD_SYM_OBJECT  2
 #define TLD_SYM_SECTION 3
 
-typedef struct tld_reloc {
-	tld_symbol *symbol;
-	tld_section *section;
-	size_t addend;
-	int type;
-} tld_reloc;
 
 typedef struct tld_file {
 	FILE *file;
@@ -91,8 +94,6 @@ typedef struct tld_file {
 	char *name;
 	size_t symbols_count;
 	tld_symbol *symbols;
-	size_t relocs_count;
-	tld_reloc relocs;
 } tld_file;
 
 typedef struct tld_state {

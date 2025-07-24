@@ -49,6 +49,10 @@ void tld_close_file(tld_file *file){
 	for(size_t i=0; i<file->sections_count; i++){
 		free(file->sections[i].name);
 		free(file->sections[i].data);
+		free(file->sections[i].relocs);
+	}
+	for(size_t i=0; i<file->symbols_count; i++){
+		free(file->symbols[i].name);
 	}
 	free(file->name);
 	free(file->sections);

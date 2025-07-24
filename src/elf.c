@@ -9,7 +9,8 @@
 #define TYPEDEF(bits) _TYPEDEF(bits,Ehdr)\
 	_TYPEDEF(bits,Shdr)\
 	_TYPEDEF(bits,Phdr)\
-	_TYPEDEF(bits,Sym)
+	_TYPEDEF(bits,Sym)\
+	_TYPEDEF(bits,Rela)
 
 #if BITS == 64
 TYPEDEF(64)
@@ -113,6 +114,34 @@ int elf64_load(tld_file *file){
 		}
 
 	}
+	//we load relocations separently cause relocation can before section
+	//(in which case we don't know the section)
+	for(size_t i=0; i<file->sections_count; i++){
+		if(fseek(file->file,header.e_shoff + header.e_shentsize * i,SEEK_SET) < 0)return -1;
+		Elf_Shdr sheader;
+		if(!fread(&sheader,sizeof(sheader),1,file->file)){
+			free(shstrtab);
+			return -1;
+		}
+		//we only do rela, is there any abi that use rel ?
+		if(sheader.sh_type != SHT_RELA)continue;
+		//find the section it apply to
+		tld_section *section = &file->sections[sheader.sh_info];
+		section->relocs = calloc(sheader.sh_size/sheader.sh_entsize,sizeof(tld_reloc));
+		section->relocs_count = sheader.sh_size/sheader.sh_entsize;
+
+		//we don't need to reload the section it's already in memory
+		Elf_Rela *relocs = (void *)file->sections[i].data;
+		for(size_t j=0; j<section->relocs_count; j++){
+			section->relocs[j].offset = relocs[j].r_offset;
+			section->relocs[j].addend = relocs[j].r_addend;
+			section->relocs[j].type   = ELF_R_TYPE(relocs[j].r_info);
+			//TODO : better way of finding symbol ?
+			section->relocs[j].symbol = &file->symbols[ELF_R_SYM(relocs[j].r_info)];
+			printf("find reloc of type %lu linked with %s\n",ELF_R_TYPE(relocs[j].r_info),section->relocs[j].symbol->name);
+		}
+	}
+
 	for(size_t i=0; i<file->symbols_count; i++){
 		if(file->symbols[i].flags & TLD_SYM_IGNORE)continue;
 		if(file->symbols[i].flags & TLD_SYM_UNDEF){
