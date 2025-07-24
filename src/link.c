@@ -163,16 +163,13 @@ int parse_symbol(tld_state *state,const char *name){
 		tld_symbol *sym = create_symbol(state->out,name);
 		sym->offset = i;
 		sym->size = 0;
-		sym->flags = 0;
+		sym->flags = TLD_SYM_ABS;
 	}
 	return 0;
 }
 
 static void append_section(tld_state *state,tld_file *input_file,tld_section *input,tld_section *output){
 	//TODO : append relocations too
-	output->data = realloc(output->data,output->size + input->size);
-	memcpy(&output->data[output->size],input->data,input->size);
-	output->size += input->size;
 
 	//append symbols
 	for(size_t i=0; i<input_file->symbols_count; i++){
@@ -184,10 +181,16 @@ static void append_section(tld_state *state,tld_file *input_file,tld_section *in
 		dest->size = src->size;
 		//should we put absolute or relative ??
 		//absolute i guess ?....
-		dest->offset = src->offset + output->address;
+		dest->offset = src->offset + output->address + output->size;
 		dest->flags = src->flags;
 		dest->type  = src->type;
 	}
+
+	//append section data
+	output->data = realloc(output->data,output->size + input->size);
+	memcpy(&output->data[output->size],input->data,input->size);
+	output->size += input->size;
+
 }
 
 static void parse_input_section(tld_state *state,const char *input,int output){
@@ -307,7 +310,22 @@ int parse_sections(tld_state *state){
 	return 0;
 }
 
+//append all absolute symbols of a file
+void append_abs(tld_state *state,tld_file *file){
+	for(size_t i=0; i<file->symbols_count; i++){
+		if(!(file->symbols[i].flags & TLD_SYM_ABS))continue;
+		tld_symbol *sym = create_symbol(state->out,file->symbols[i].name);
+		sym->size  = file->symbols[i].size;
+		sym->offset = file->symbols[i].offset;
+		sym->type   = file->symbols[i].type;
+		sym->flags  = file->symbols[i].flags;
+	}
+}
+
 int linking(tld_state *state){
+	for(size_t i=0; i<state->in_count; i++){
+		append_abs(state,state->in[i]);
+	}
 	state->line = 1;
 	for(;;){
 		token *tok = get_token(state);
