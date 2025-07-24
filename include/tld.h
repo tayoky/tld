@@ -79,6 +79,8 @@ typedef struct tld_symbol {
 #define TLD_SYM_WEAK   0x02
 #define TLD_SYM_LOCAL  0x04
 #define TLD_SYM_IGNORE 0x08
+#define TLD_SYM_COMMON 0x10
+#define TLD_SYM_ABS    0x20
 
 #define TLD_SYM_NOTYPE  0
 #define TLD_SYM_FUNC    1

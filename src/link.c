@@ -129,9 +129,9 @@ static tld_symbol *create_symbol(tld_file *file,const char *name){
 	if(name[0])
 	for(size_t i=0; i<file->symbols_count; i++){
 		if(!strcmp(name,file->symbols[i].name)){
-			//it exist but if it is a week symbols
+			//it exist but if it is a week symbol or is undefined
 			//we can replace it
-			if(file->symbols[i].flags & TLD_SYM_WEAK){
+			if(file->symbols[i].flags & TLD_SYM_WEAK || file->symbols[i].flags & TLD_SYM_UNDEF){
 				return &file->symbols[i];
 			} else {
 				error("redefinition of symbol %s",name);

@@ -93,7 +93,22 @@ int elfxx_load (tld_file *file){
 				file->symbols[file->symbols_count+j].name = strdup(strtab+symbols[j].st_name);
 				file->symbols[file->symbols_count+j].offset = symbols[j].st_value;
 				file->symbols[file->symbols_count+j].size = symbols[j].st_size;
-				//TODO : symbol binding
+
+				//symbol binsing
+				switch(ELF_ST_BIND(symbols[j].st_info)){
+				case STB_LOCAL:
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_LOCAL;
+					break;
+				case STB_GLOBAL:
+					break;
+				case STB_WEAK:
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_WEAK;
+					break;
+				}
+					
+
+
+				//symbol type
 				switch(ELF_ST_TYPE(symbols[j].st_info)){
 				case STT_OBJECT:
 					file->symbols[file->symbols_count+j].type = TLD_SYM_OBJECT;
@@ -108,15 +123,24 @@ int elfxx_load (tld_file *file){
 					file->symbols[file->symbols_count+j].type = TLD_SYM_NOTYPE;
 					break;
 				}
-				if(symbols[j].st_shndx <= SHN_UNDEF){
+				switch(symbols[j].st_shndx){
+				case SHN_UNDEF:
 					file->symbols[file->symbols_count+j].flags |= TLD_SYM_UNDEF;
 					continue;
-				}
-				if(symbols[j].st_shndx >= SHN_LOPROC){
-					file->symbols[file->symbols_count+j].flags |= TLD_SYM_IGNORE;
+				case SHN_ABS:
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_ABS;
+					continue;
+				case SHN_COMMON:
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_COMMON;
 					continue;
 				}
-				file->symbols[file->symbols_count+j].section = &file->sections[symbols[j].st_shndx];
+
+				if(symbols[j].st_shndx >= SHN_LOPROC){
+					file->symbols[file->symbols_count+j].flags |= TLD_SYM_IGNORE;
+				} else {
+
+					file->symbols[file->symbols_count+j].section = &file->sections[symbols[j].st_shndx];
+				}
 			}
 			file->symbols_count += sheader.sh_size/sheader.sh_entsize;
 			free(strtab);
@@ -166,6 +190,8 @@ int elfxx_load (tld_file *file){
 		if(file->symbols[i].flags & TLD_SYM_IGNORE)continue;
 		if(file->symbols[i].flags & TLD_SYM_UNDEF){
 			printf("find undefined symbol %s\n",file->symbols[i].name);
+		} else if(file->symbols[i].flags & TLD_SYM_ABS){
+			printf("find absolute symbol %s\n",file->symbols[i].name);
 		} else {
 			printf("find symbol %s in %s\n",file->symbols[i].name,file->symbols[i].section->name);
 		}
@@ -279,6 +305,10 @@ int elfxx_save(tld_file *file,int arch){
 			.st_size  = file->symbols[i].size,
 			.st_shndx = 0/*(file->symbols[i].section - file->sections) / sizeof(tld_section) + 1,*/
 		};
+
+		if(file->symbols[i].flags & TLD_SYM_ABS){
+			sym.st_shndx = SHN_ABS;
+		}
 		int type;
 		switch(file->symbols[i].type){
 		case TLD_SYM_FUNC:
@@ -294,7 +324,8 @@ int elfxx_save(tld_file *file,int arch){
 			type = STT_NOTYPE;
 			break;
 		}
-		sym.st_info = ELF_ST_INFO(0,type);
+		int bind = file->symbols[i].flags & TLD_SYM_WEAK ? STB_WEAK : STB_GLOBAL;
+		sym.st_info = ELF_ST_INFO(bind,type);
 		add_string(file->symbols[i].name);
 		fwrite(&sym,sizeof(sym),1,file->file);
 	}
