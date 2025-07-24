@@ -158,7 +158,6 @@ int parse_symbol(tld_state *state,const char *name){
 		}
 		state->addr = i;
 	} else {
-		//TODO : create a symbols
 		tld_symbol *sym = create_symbol(state->out,name);
 		sym->offset = i;
 		sym->size = 0;
@@ -167,11 +166,25 @@ int parse_symbol(tld_state *state,const char *name){
 	return 0;
 }
 
-static void append_section(tld_state *state,tld_section *input,tld_section *output){
-	//TODO : append symbols and relocations too
+static void append_section(tld_state *state,tld_file *input_file,tld_section *input,tld_section *output){
+	//TODO : append relocations too
 	output->data = realloc(output->data,output->size + input->size);
 	memcpy(&output->data[output->size],input->data,input->size);
 	output->size += input->size;
+
+	//append symbols
+	for(size_t i=0; i<input_file->symbols_count; i++){
+		if(input_file->symbols[i].section != input)continue;
+		//the symbols is on the spec7fied section
+		//append it
+		tld_symbol *src  = &input_file->symbols[i];
+		tld_symbol *dest = create_symbol(state->out,src->name);
+		dest->size = src->size;
+		//should we put absolute or relative ??
+		//absolute i guess ?....
+		dest->offset = src->offset + output->address;
+		dest->flags = src->flags;
+	}
 }
 
 static void parse_input_section(tld_state *state,const char *input,int output){
@@ -197,7 +210,7 @@ static void parse_input_section(tld_state *state,const char *input,int output){
 		for(size_t j=0; j<sec_count; j++){
 			for(size_t k=0; k<state->in[i]->sections_count; k++){
 				if(!glob_match(sec[j],state->in[i]->sections[k].name))continue;
-				append_section(state,&state->in[i]->sections[k],&state->out->sections[output-1]);
+				append_section(state,state->in[i],&state->in[i]->sections[k],&state->out->sections[output-1]);
 				printf("add %s of %s\n",state->in[i]->sections[k].name,state->in[i]->name);
 			}
 		}
