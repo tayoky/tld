@@ -36,13 +36,17 @@ typedef struct token {
 #define T_BLOCK       134
 #define T_COM_START   135
 #define T_COM_END     136
+#define T_OUTPUT_FMT  137
+#define T_OUTPUT      138
 
 #define ARCH_I386     1
 #define ARCH_X86_64   2
 #define ARCH_AARCH64  3
 
+#define FORMAT_AUTO   0
 #define FORMAT_ELF64  1
-#define FORMAT_BINARY 2
+#define FORMAT_ELF32  2
+#define FORMAT_BINARY 3
 
 typedef struct tld_section {
 	char *name;
@@ -85,9 +89,11 @@ typedef struct tld_state {
 	token *unget;
 	int line;
 	int flags;
+	int input_format;
+	int output_format;
 } tld_state;
 
-#define FLAG_R 0x01
+#define FLAG_RELOC 0x01
 
 token *next_token(tld_state *);
 void destroy_token(token *t);
@@ -99,6 +105,8 @@ int tld_save_file(tld_file *file,int format,int arch);
 void tld_close_file(tld_file *file);
 int elf_load(tld_file *file);
 int elf64_save(tld_file *file,int arch);
+int bin_save(tld_file *file,int arch);
+int str2format(const char *str);
 
 int linking(tld_state *state);
 

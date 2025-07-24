@@ -13,6 +13,7 @@ if [ -z "$CFLAGS" ] ; then
 fi
 
 OPT=""
+DEFAULT_OUTPUT_FORMAT="elf64"
 
 for i in "$@"; do
 	case $i in
@@ -40,6 +41,11 @@ for i in "$@"; do
 			OPT="-DDEBUG $OPT"
 			shift
 			;;
+		--default-output-format=*)
+			DEFAULT_OUTPUT_FORMAT="${i#*=}"
+			shift # past argument=value
+			;;
+
 		-*|--*)
 			echo "Unknown option $i"
 			exit 1
@@ -68,6 +74,9 @@ fi
 if [ "$HOST" = "" ] ; then
 	HOST=$($CC -dumpmachine)
 fi
+
+#add config to cflags
+CFLAGS="$CFLAGS -DDEFAULT_OUTPUT_FORMAT='\"$DEFAULT_OUTPUT_FORMAT\"'"
 
 echo "#generated automatically by ./configure" > config.mk
 echo "HOST=$HOST" >> config.mk

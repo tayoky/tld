@@ -40,10 +40,29 @@ void set_arch(tld_state *state,const char *arg){
 
 }
 
+void set_format(tld_state *state,const char *arg){
+	state->input_format = str2format(arg);
+	if(state->input_format < 0){
+		error("invalid format : %s",arg);
+		exit(EXIT_FAILURE);
+	}
+}
+
+void set_out_format(tld_state *state,const char *arg){
+	state->output_format = str2format(arg);
+	if(state->output_format < 0){
+		error("invalid format : %s",arg);
+		exit(EXIT_FAILURE);
+	}
+}
+
 option options[] = {
 	OPTA('o',"--output",set_output),
 	OPTA('T',"--script",set_script),
 	OPTA('A',"--architecture",set_arch),
+	OPTA('n',"--format",set_format),
+	OPTA(0,"--oformat",set_out_format),
+	OPT ('r',"--relocatable",FLAG_RELOC),
 };
 
 void parse_arg(tld_state *state,int argc,char **argv){
@@ -131,7 +150,12 @@ int main(int argc,char **argv){
 		}
 	}
 	linking(&state);
-	if(tld_save_file(state.out,FORMAT_ELF64,ARCH_AARCH64) < 0){
+	//no output format ?
+	//take default one
+	if(state.output_format == FORMAT_AUTO){
+		state.output_format = str2format(DEFAULT_OUTPUT_FORMAT);
+	}
+	if(tld_save_file(state.out,state.output_format,ARCH_AARCH64) < 0){
 		perror(state.out->name);
 		return EXIT_FAILURE;
 	}

@@ -61,9 +61,28 @@ int tld_save_file(tld_file *file,int format,int arch){
 	switch(format){
 	case FORMAT_ELF64:
 		return elf64_save(file,arch);
+	case FORMAT_BINARY:
+		return bin_save(file,arch);
 	default:
 		errno = EINVAL;
 		return -1;
 	}
 	return 0;
+}
+
+int str2format(const char *str){
+	if(!strncmp(str,"bin",3)){
+		return FORMAT_BINARY;
+	}
+	if(!strncmp(str,"elf",3)){
+		str += 3;
+		if(*str == '-')str++;
+		if(!strcmp(str,"32")){
+			return FORMAT_ELF32;
+		} else {
+			return FORMAT_ELF64;
+		}
+	}
+	errno = EINVAL;
+	return -1;
 }

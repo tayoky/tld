@@ -296,6 +296,20 @@ int linking(tld_state *state){
 	for(;;){
 		token *tok = get_token(state);
 		switch(tok->type){
+		case T_OUTPUT_FMT:
+			expect(state,'(');
+			token *fmt = get_token(state);
+			if(fmt->type != T_STR)syntax_error();
+			if(state->output_format == FORMAT_AUTO){
+				state->output_format = str2format(fmt->value);
+				if(state->output_format < 0){
+					error("invalid output format : %s",fmt->value);
+					exit(EXIT_FAILURE);
+				}
+			}
+			destroy_token(fmt);
+			expect(state,')');
+			break;
 		case T_ENTRY:
 			expect(state,'(');
 			token *entry = get_token(state);

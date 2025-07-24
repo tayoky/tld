@@ -40,12 +40,14 @@ struct tok tokens[] = {
 };
 
 struct keyword keywords[] = {
-	KEYWORD(T_SECTIONS,"SECTIONS"),
-	KEYWORD(T_ENTRY   ,"ENTRY"),
-	KEYWORD(T_PHDR    ,"PHDR"),
-	KEYWORD(T_TARGET  ,"TARGET"),
-	KEYWORD(T_ALIGN   ,"ALIGN"),
-	KEYWORD(T_BLOCK   ,"BLOCK"),
+	KEYWORD(T_SECTIONS  ,"SECTIONS"),
+	KEYWORD(T_ENTRY     ,"ENTRY"),
+	KEYWORD(T_PHDR      ,"PHDR"),
+	KEYWORD(T_TARGET    ,"TARGET"),
+	KEYWORD(T_ALIGN     ,"ALIGN"),
+	KEYWORD(T_BLOCK     ,"BLOCK"),
+	KEYWORD(T_OUTPUT_FMT,"OUTPUT_FORMAT"),
+	KEYWORD(T_OUTPUT    ,"OUTPUT"),
 };
 
 const char *token_name(token *t){
