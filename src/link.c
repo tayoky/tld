@@ -169,12 +169,20 @@ int parse_symbol(tld_state *state,const char *name){
 }
 
 static void append_section(tld_state *state,tld_file *input_file,tld_section *input,tld_section *output){
-	//TODO : append relocations too
+	//append relocations
+	output->relocs = realloc(output->relocs,(output->relocs_count + input->relocs_count) * sizeof(tld_reloc));
+	for(size_t i=0; i<input->relocs_count; i++){
+		output->relocs[output->relocs_count+i].offset = input->relocs[i].offset + output->size;
+		output->relocs[output->relocs_count+i].addend = input->relocs[i].addend;
+		output->relocs[output->relocs_count+i].type   = input->relocs[i].type;
+		output->relocs[output->relocs_count+i].symbol = input->relocs[i].symbol;
+	}
+	output->relocs_count += input->relocs_count;
 
 	//append symbols
 	for(size_t i=0; i<input_file->symbols_count; i++){
 		if(input_file->symbols[i].section != input)continue;
-		//the symbols is on the spec7fied section
+		//the symbols is on the specified section
 		//append it
 		tld_symbol *src  = &input_file->symbols[i];
 		tld_symbol *dest = create_symbol(state->out,src->name);
@@ -184,6 +192,7 @@ static void append_section(tld_state *state,tld_file *input_file,tld_section *in
 		dest->offset = src->offset + output->address + output->size;
 		dest->flags = src->flags;
 		dest->type  = src->type;
+		src->linked = dest-state->out->symbols;
 	}
 
 	//append section data

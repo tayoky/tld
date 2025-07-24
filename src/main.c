@@ -193,6 +193,7 @@ int main(int argc,char **argv){
 #endif
 			;
 	}
+	tld_apply_relocations(state.out,state.arch);
 	if(tld_save_file(state.out,state.output_format,state.arch) < 0){
 		perror(state.out->name);
 		return EXIT_FAILURE;

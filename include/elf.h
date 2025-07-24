@@ -258,6 +258,11 @@ typedef struct {
 
 //relocations types
 
+//i386
+#define R_386_NONE  0
+#define R_386_32    1
+#define R_386_PC32  2
+
 //x86_64
 #define R_X86_64_NONE           0       /* No reloc */
 #define R_X86_64_64             1       /* Direct 64 bit  */

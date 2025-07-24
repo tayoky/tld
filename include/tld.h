@@ -69,6 +69,7 @@ typedef struct tld_section {
 typedef struct tld_symbol {
 	char *name;
 	tld_section *section;
+	size_t linked; //used to link the copy of the symbol in local table
 	size_t offset;
 	size_t size;
 	int flags;
@@ -132,6 +133,7 @@ int bin_save(tld_file *file,int arch);
 int str2format(const char *str);
 
 int linking(tld_state *state);
+void tld_apply_relocations(tld_file *file,int arch);
 
 int glob_match(const char *patern,const char *str);
 int glob_path_match(const char *patern,const char *str);
