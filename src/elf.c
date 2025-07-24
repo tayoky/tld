@@ -11,7 +11,24 @@
 	_TYPEDEF(bits,Phdr)\
 	_TYPEDEF(bits,Sym)
 
+#if BITS == 64
 TYPEDEF(64)
+#define ELF_R_SYM(i)     ELF64_R_SYM(i)
+#define ELF_R_TYPE(i)    ELF64_R_TYPE(i)
+#define ELF_R_INFO(s,t)  ELF64_R_INFO(i,t)
+#define ELF_ST_BIND(i)   ELF64_ST_BIND(i)
+#define ELF_ST_TYPE(i)   ELF64_ST_TYPE(i)
+#define ELF_ST_INFO(b,t) ELF64_ST_INFO(b,t)
+#elif BITS == 32
+TYPEDEF(32)
+#define ELF_R_SYM(i)     ELF32_R_SYM(i)
+#define ELF_R_TYPE(i)    ELF32_R_TYPE(i)
+#define ELF_R_INFO(s,t)  ELF32_R_INFO(i,t)
+#define ELF_ST_BIND(i)   ELF32_ST_BIND(i)
+#define ELF_ST_TYPE(i)   ELF32_ST_TYPE(i)
+#define ELF_ST_INFO(b,t) ELF32_ST_INFO(b,t)
+#endif
+
 
 int elf64_load(tld_file *file){
 	rewind(file->file);
@@ -64,6 +81,20 @@ int elf64_load(tld_file *file){
 				file->symbols[file->symbols_count+j].offset = symbols[j].st_value;
 				file->symbols[file->symbols_count+j].size = symbols[j].st_size;
 				//TODO : symbol type/binding
+				switch(ELF_ST_TYPE(symbols[j].st_info)){
+				case STT_OBJECT:
+					file->symbols[file->symbols_count+j].type = TLD_SYM_OBJECT;
+					break;
+				case STT_SECTION:
+					file->symbols[file->symbols_count+j].type = TLD_SYM_SECTION;
+					break;
+				case STT_FUNC:
+					file->symbols[file->symbols_count+j].type = TLD_SYM_FUNC;
+					break;
+				default:
+					file->symbols[file->symbols_count+j].type = TLD_SYM_NOTYPE;
+					break;
+				}
 				if(symbols[j].st_shndx <= SHN_UNDEF){
 					file->symbols[file->symbols_count+j].flags |= TLD_SYM_UNDEF;
 					continue;
@@ -184,6 +215,22 @@ int elf64_save(tld_file *file,int arch){
 			.st_size  = file->symbols[i].size,
 			.st_shndx = 0/*(file->symbols[i].section - file->sections) / sizeof(tld_section) + 1,*/
 		};
+		int type;
+		switch(file->symbols[i].type){
+		case TLD_SYM_FUNC:
+			type = STT_FUNC;
+			break;
+		case TLD_SYM_OBJECT:
+			type = STT_OBJECT;
+			break;
+		case TLD_SYM_SECTION:
+			type = STT_SECTION;
+			break;
+		default:
+			type = STT_NOTYPE;
+			break;
+		}
+		sym.st_info = ELF_ST_INFO(0,type);
 		add_string(file->symbols[i].name);
 		fwrite(&sym,sizeof(sym),1,file->file);
 	}

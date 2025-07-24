@@ -5,6 +5,8 @@
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
+//use same relocation type as elf, for simplicity
+#include "elf.h"
 
 typedef struct token {
 	int type;
@@ -61,12 +63,25 @@ typedef struct tld_symbol {
 	size_t offset;
 	size_t size;
 	int flags;
+	int type;
 } tld_symbol;
 
 #define TLD_SYM_UNDEF  0x01
 #define TLD_SYM_WEAK   0x02
 #define TLD_SYM_LOCAL  0x04
 #define TLD_SYM_IGNORE 0x08
+
+#define TLD_SYM_NOTYPE  0
+#define TLD_SYM_FUNC    1
+#define TLD_SYM_OBJECT  2
+#define TLD_SYM_SECTION 3
+
+typedef struct tld_reloc {
+	tld_symbol *symbol;
+	tld_section *section;
+	size_t addend;
+	int type;
+} tld_reloc;
 
 typedef struct tld_file {
 	FILE *file;
@@ -76,6 +91,8 @@ typedef struct tld_file {
 	char *name;
 	size_t symbols_count;
 	tld_symbol *symbols;
+	size_t relocs_count;
+	tld_reloc relocs;
 } tld_file;
 
 typedef struct tld_state {

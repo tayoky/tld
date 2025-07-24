@@ -184,6 +184,7 @@ static void append_section(tld_state *state,tld_file *input_file,tld_section *in
 		//absolute i guess ?....
 		dest->offset = src->offset + output->address;
 		dest->flags = src->flags;
+		dest->type  = src->type;
 	}
 }
 

@@ -198,6 +198,10 @@ typedef struct {
 #define ELF32_ST_TYPE(i) ((i)&0xf)
 #define ELF32_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
 
+#define ELF64_ST_BIND(i) ((i)>>4)
+#define ELF64_ST_TYPE(i) ((i)&0xf)
+#define ELF64_ST_INFO(b,t) (((b)<<4)+((t)&0xf))
+
 //ELFXX_ST_BIND
 #define STB_LOCAL  0
 #define STB_GLOBAL 1
