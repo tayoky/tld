@@ -102,6 +102,7 @@ int elf64_save(tld_file *file,int arch){
 	memcpy(header.e_ident,ELFMAG,SELFMAG);
 	header.e_ident[EI_VERSION] = EV_CURRENT;
 	header.e_ident[EI_CLASS]   = ELFCLASS64;
+	header.e_ident[EI_DATA]    = ELFDATA2LSB;
 	header.e_ehsize = sizeof(header);
 	header.e_type = ET_EXEC;
 	header.e_phentsize = sizeof(Elf_Phdr);

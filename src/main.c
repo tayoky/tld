@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include "tld.h"
 
 typedef struct option {
@@ -37,7 +38,30 @@ void set_script(tld_state *state,char *arg){
 }
 
 void set_arch(tld_state *state,const char *arg){
+	if(!strcasecmp(arg,"x86_64")){
+		state->arch = ARCH_X86_64;
+		return;
+	}
+	if(*arg == 'I' || *arg == 'i'){
+		arg++;
+		if(!isdigit(*arg)){
+			goto invalid;
+		}
+		arg++;
+		if(strcmp(arg,"86")){
+			goto invalid;
+		}
+		state->arch = ARCH_I386;
+		return;
+	}
 
+	if(!strcasecmp(arg,"aarch64") || !strcasecmp(arg,"arm64")){
+		state->arch = ARCH_AARCH64;
+		return;
+	}
+invalid:
+	error("invalid architecture : %s",arg);
+	exit(EXIT_FAILURE);
 }
 
 void set_format(tld_state *state,const char *arg){
