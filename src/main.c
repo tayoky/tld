@@ -179,7 +179,21 @@ int main(int argc,char **argv){
 	if(state.output_format == FORMAT_AUTO){
 		state.output_format = str2format(DEFAULT_OUTPUT_FORMAT);
 	}
-	if(tld_save_file(state.out,state.output_format,ARCH_AARCH64) < 0){
+	if(!state.arch){
+		//take current arch as default or x86_64
+		state.arch =
+#ifdef __x86_64__
+			ARCH_X86_64
+#elif defined(__i386__)
+			ARCH_I386
+#elif defined(__aarch64__)
+			ARCH_AARCH64
+#else
+			ARCH_X86_64
+#endif
+			;
+	}
+	if(tld_save_file(state.out,state.output_format,state.arch) < 0){
 		perror(state.out->name);
 		return EXIT_FAILURE;
 	}

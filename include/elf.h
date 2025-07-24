@@ -54,6 +54,8 @@ typedef int64_t	 Elf64_Sxword;
 #define EM_860         7  //Intel 80860
 #define EM_MIPS        8  //MIPS RS3000 Big-Endian
 #define EM_MIPS_RS4_BE 10 //MIPS RS4000 Big-Endian
+#define EM_X86_64      62
+#define EM_AARCH64     183
 
 //e_version
 #define EV_CURRENT 1 //Current version

@@ -66,6 +66,9 @@ int elf64_load(tld_file *file){
 		fread(file->sections[i].data,sheader.sh_size,1,file->file);
 		switch(sheader.sh_type){
 		case SHT_SYMTAB:
+			//if null entisize expect default size
+			//to maintain compatibilty with older version of tld
+			if(!sheader.sh_entsize)sheader.sh_entsize = sizeof(Elf_Sym);
 			fseek(file->file,header.e_shoff + header.e_shentsize * sheader.sh_link,SEEK_SET);
 			Elf_Shdr strtab_hdr;
 			fread(&strtab_hdr,sizeof(strtab_hdr),1,file->file);
@@ -73,14 +76,14 @@ int elf64_load(tld_file *file){
 			fseek(file->file,strtab_hdr.sh_offset,SEEK_SET);
 			fread(strtab,strtab_hdr.sh_size,1,file->file);
 
-			file->symbols = realloc(file->symbols,(file->symbols_count + sheader.sh_size/sizeof(Elf_Sym)) * sizeof(tld_symbol));
-			memset(&file->symbols[file->symbols_count],0,sheader.sh_size/sizeof(Elf_Sym) * sizeof(tld_symbol));
+			file->symbols = realloc(file->symbols,(file->symbols_count + sheader.sh_size/sheader.sh_entsize) * sizeof(tld_symbol));
+			memset(&file->symbols[file->symbols_count],0,sheader.sh_size/sheader.sh_entsize * sizeof(tld_symbol));
 			Elf_Sym *symbols = (Elf_Sym *)file->sections[i].data;
-			for(size_t j=0; j < sheader.sh_size/sizeof(Elf_Sym); j++){
+			for(size_t j=0; j < sheader.sh_size/sheader.sh_entsize; j++){
 				file->symbols[file->symbols_count+j].name = strdup(strtab+symbols[j].st_name);
 				file->symbols[file->symbols_count+j].offset = symbols[j].st_value;
 				file->symbols[file->symbols_count+j].size = symbols[j].st_size;
-				//TODO : symbol type/binding
+				//TODO : symbol binding
 				switch(ELF_ST_TYPE(symbols[j].st_info)){
 				case STT_OBJECT:
 					file->symbols[file->symbols_count+j].type = TLD_SYM_OBJECT;
@@ -105,7 +108,7 @@ int elf64_load(tld_file *file){
 				}
 				file->symbols[file->symbols_count+j].section = &file->sections[symbols[j].st_shndx];
 			}
-			file->symbols_count += sheader.sh_size/sizeof(Elf_Sym);
+			file->symbols_count += sheader.sh_size/sheader.sh_entsize;
 			free(strtab);
 		}
 
@@ -134,6 +137,17 @@ int elf64_save(tld_file *file,int arch){
 	header.e_ident[EI_VERSION] = EV_CURRENT;
 	header.e_ident[EI_CLASS]   = ELFCLASS64;
 	header.e_ident[EI_DATA]    = ELFDATA2LSB;
+	switch(arch){
+	case ARCH_I386:
+		header.e_machine = EM_386;
+		break;
+	case ARCH_X86_64:
+		header.e_machine = EM_X86_64;
+		break;
+	case ARCH_AARCH64:
+		header.e_machine = EM_AARCH64;
+		break;
+	}
 	header.e_ehsize = sizeof(header);
 	header.e_type = ET_EXEC;
 	header.e_phentsize = sizeof(Elf_Phdr);
@@ -188,6 +202,7 @@ int elf64_save(tld_file *file,int arch){
 	sheader.sh_type = SHT_SYMTAB;
 	sheader.sh_offset = offset;
 	sheader.sh_info = 1024;
+	sheader.sh_entsize = sizeof(Elf_Sym);
 	sheader.sh_name = strtab_len;
 	sheader.sh_link = header.e_shstrndx,
 	add_string(".symtab");
