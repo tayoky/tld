@@ -65,6 +65,8 @@ int tld_save_file(tld_file *file,int format,int arch){
 	switch(format){
 	case FORMAT_ELF64:
 		return elf64_save(file,arch);
+	case FORMAT_ELF32:
+		return elf32_save(file,arch);
 	case FORMAT_BINARY:
 		return bin_save(file,arch);
 	default:

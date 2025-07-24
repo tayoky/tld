@@ -122,7 +122,10 @@ tld_file *tld_open_file(const char *path,const char *mode);
 int tld_save_file(tld_file *file,int format,int arch);
 void tld_close_file(tld_file *file);
 int elf_load(tld_file *file);
+int elf64_load(tld_file *file);
+int elf32_load(tld_file *file);
 int elf64_save(tld_file *file,int arch);
+int elf32_save(tld_file *file,int arch);
 int bin_save(tld_file *file,int arch);
 int str2format(const char *str);
 
