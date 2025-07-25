@@ -328,6 +328,7 @@ void append_abs(tld_state *state,tld_file *file){
 		sym->offset = file->symbols[i].offset;
 		sym->type   = file->symbols[i].type;
 		sym->flags  = file->symbols[i].flags;
+		file->symbols[i].linked = sym - state->out->symbols;
 	}
 }
 

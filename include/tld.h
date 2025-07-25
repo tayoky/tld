@@ -64,7 +64,13 @@ typedef struct tld_section {
 	uintptr_t address;
 	size_t relocs_count;
 	tld_reloc *relocs;
+	int flags;
 } tld_section;
+
+#define TLD_SEC_R     0x01
+#define TLD_SEC_W     0x02
+#define TLD_SEC_X     0x04
+#define TLD_SEC_NOBIT 0x08
 
 typedef struct tld_symbol {
 	char *name;

@@ -72,8 +72,22 @@ int elfxx_load (tld_file *file){
 		file->sections[i].size = sheader.sh_size;
 		file->sections[i].name = strdup(&shstrtab[sheader.sh_name]);
 		file->sections[i].data = malloc(sheader.sh_size);
-		fseek(file->file,sheader.sh_offset,SEEK_SET);
-		fread(file->sections[i].data,sheader.sh_size,1,file->file);
+		if(sheader.sh_flags & SHF_ALLOC){
+			file->sections[i].flags |= TLD_SEC_R;
+		}
+		if(sheader.sh_flags & SHF_WRITE){
+			file->sections[i].flags |= TLD_SEC_W;
+		}
+		if(sheader.sh_flags & SHF_EXECINSTR){
+			file->sections[i].flags |= TLD_SEC_X;
+		}
+		if(sheader.sh_type == SHT_NOBITS){
+			file->sections[i].flags |= TLD_SEC_NOBIT;
+			memset(file->sections[i].data,0,sheader.sh_size);
+		} else {
+			fseek(file->file,sheader.sh_offset,SEEK_SET);
+			fread(file->sections[i].data,sheader.sh_size,1,file->file);
+		}
 		switch(sheader.sh_type){
 		case SHT_SYMTAB:
 			//if null entisize expect default size
@@ -326,7 +340,14 @@ int elfxx_save(tld_file *file,int arch){
 			type = STT_NOTYPE;
 			break;
 		}
-		int bind = file->symbols[i].flags & TLD_SYM_WEAK ? STB_WEAK : STB_GLOBAL;
+		int bind;
+		if(file->symbols[i].flags & TLD_SYM_WEAK){
+			bind = STB_WEAK;
+		} else if(file->symbols[i].flags & TLD_SYM_LOCAL){
+			bind = STB_LOCAL;
+		} else {
+			bind = STB_GLOBAL;
+		}
 		sym.st_info = ELF_ST_INFO(bind,type);
 		add_string(file->symbols[i].name);
 		fwrite(&sym,sizeof(sym),1,file->file);
