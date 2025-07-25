@@ -225,6 +225,7 @@ int elfxx_save(tld_file *file,int arch){
 	}
 	header.e_ehsize = sizeof(header);
 	header.e_type = ET_EXEC;
+	header.e_entry = file->entry;
 	header.e_phentsize = sizeof(Elf_Phdr);
 	header.e_phnum = file->sections_count + 1;
 	header.e_phoff = sizeof(header);

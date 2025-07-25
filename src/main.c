@@ -179,6 +179,9 @@ int main(int argc,char **argv){
 	if(state.output_format == FORMAT_AUTO){
 		state.output_format = str2format(DEFAULT_OUTPUT_FORMAT);
 	}
+	if(!state.entry_name){
+		state.entry_name = strdup("start");
+	}
 	if(!state.arch){
 		//take current arch as default or x86_64
 		state.arch =
@@ -193,6 +196,9 @@ int main(int argc,char **argv){
 #endif
 			;
 	}
+	//find entry point
+	tld_symbol *entry = tld_get_sym(state.out,state.entry_name);
+	if(entry)state.out->entry = entry->offset;
 	tld_apply_relocations(state.out,state.arch);
 	if(tld_save_file(state.out,state.output_format,state.arch) < 0){
 		perror(state.out->name);

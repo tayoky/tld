@@ -97,6 +97,7 @@ typedef struct tld_file {
 	char *name;
 	size_t symbols_count;
 	tld_symbol *symbols;
+	size_t entry;
 } tld_file;
 
 typedef struct tld_state {
@@ -131,6 +132,7 @@ int elf64_save(tld_file *file,int arch);
 int elf32_save(tld_file *file,int arch);
 int bin_save(tld_file *file,int arch);
 int str2format(const char *str);
+tld_symbol *tld_get_sym(tld_file *file,const char *name);
 
 int linking(tld_state *state);
 void tld_apply_relocations(tld_file *file,int arch);

@@ -76,6 +76,18 @@ int tld_save_file(tld_file *file,int format,int arch){
 	return 0;
 }
 
+tld_symbol *tld_get_sym(tld_file *file,const char *name){
+	size_t i = 0;
+	for(; i<file->symbols_count; i++){
+		if(!strcmp(file->symbols[i].name,name) && !(file->symbols[i].flags & TLD_SYM_LOCAL))break;
+	}
+	if(i == file->symbols_count){
+		error("undefined reference to %s",name);
+		return NULL;
+	}
+	return &file->symbols[i];
+}
+
 int str2format(const char *str){
 	if(!strncmp(str,"bin",3)){
 		return FORMAT_BINARY;

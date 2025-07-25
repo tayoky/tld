@@ -23,15 +23,8 @@ static void apply_reloc(tld_file *file,tld_section *section,tld_reloc *reloc,int
 	tld_symbol *sym = reloc->symbol;
 	if(sym->flags & TLD_SYM_UNDEF){
 		//search a global or weak symbol with same name in global table
-		size_t i = 0;
-		for(; i<file->symbols_count; i++){
-			if(!strcmp(file->symbols[i].name,sym->name) && !(file->symbols[i].flags & TLD_SYM_LOCAL))break;
-		}
-		if(i == file->symbols_count){
-			error("undefined reference to %s",sym->name);
-			return;
-		}
-		sym = &file->symbols[i];
+		sym = tld_get_sym(file,sym->name);
+		if(!sym)return;
 	} else {
 		sym = &file->symbols[sym->linked];
 	}
