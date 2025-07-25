@@ -252,6 +252,7 @@ int elfxx_save(tld_file *file,int arch){
 		pheader.p_filesz = pheader.p_memsz;
 		pheader.p_offset = offset;
 		pheader.p_vaddr = file->sections[i].address;
+		pheader.p_flags = PF_R | PF_W | PF_X;
 		offset += pheader.p_filesz;
 		fwrite(&pheader,sizeof(pheader),1,file->file);
 	}
