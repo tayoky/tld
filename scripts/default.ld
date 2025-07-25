@@ -12,7 +12,19 @@ SECTIONS {
 	. = 0x10000; 
 	.text ALIGN(4K) : { 
 		*(.text .text.*) 
+		*(.init .init.*)
+		*(.fini .fini.*)
 	} 
+	.init_array ALIGN(4K) : {
+		__init_array_start = . ;
+		*(.init_array .init_array.*)
+		__init_array_end = . ;
+	}
+	.fini_array ALIGN(4K) : {
+		__fini_array_start = . ;
+		*(.fini_array .fini_array.*)
+		__fini_array_end = . ;
+	}
 	.data ALIGN(4K) : { 
 		*(.data .data.*)
 		*(.rodata .rodata.*)

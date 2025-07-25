@@ -204,7 +204,9 @@ static void append_section(tld_state *state,tld_file *input_file,tld_section *in
 }
 
 static void parse_input_section(tld_state *state,const char *input,int output){
+#ifdef DEBUG
 	printf("add section of %s in %d\n",input,output);
+#endif
 	expect(state,'(');
 	size_t sec_count = 0;
 	char **sec = NULL;
@@ -227,7 +229,9 @@ static void parse_input_section(tld_state *state,const char *input,int output){
 			for(size_t k=0; k<state->in[i]->sections_count; k++){
 				if(!glob_match(sec[j],state->in[i]->sections[k].name))continue;
 				append_section(state,state->in[i],&state->in[i]->sections[k],&state->out->sections[output-1]);
+#ifdef DEBUG
 				printf("add %s of %s\n",state->in[i]->sections[k].name,state->in[i]->name);
+#endif
 			}
 		}
 	}
@@ -239,7 +243,9 @@ static void parse_input_section(tld_state *state,const char *input,int output){
 }
 
 int parse_output_section(tld_state *state,const char *name){
+#ifdef DEBUG
 	printf("parse output section %s\n",name);
+#endif
 	state->out->sections = realloc(state->out->sections,(++state->out->sections_count) * sizeof(tld_section));
 	memset(&state->out->sections[state->out->sections_count-1],0,sizeof(tld_section));
 	state->out->sections[state->out->sections_count-1].name = strdup(name);

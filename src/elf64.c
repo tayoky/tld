@@ -218,7 +218,6 @@ int elfxx_load (tld_file *file){
 				 strtab_len += strlen(str) + 1;
 
 int elfxx_save(tld_file *file,int arch){
-	puts("save");
 	rewind(file->file);
 	Elf_Ehdr header;
 	memset(&header,0,sizeof(header));
