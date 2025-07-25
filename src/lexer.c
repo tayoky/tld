@@ -42,12 +42,15 @@ struct tok tokens[] = {
 struct keyword keywords[] = {
 	KEYWORD(T_SECTIONS  ,"SECTIONS"),
 	KEYWORD(T_ENTRY     ,"ENTRY"),
-	KEYWORD(T_PHDR      ,"PHDR"),
+	KEYWORD(T_PHDR      ,"PHDRS"),
 	KEYWORD(T_TARGET    ,"TARGET"),
 	KEYWORD(T_ALIGN     ,"ALIGN"),
 	KEYWORD(T_BLOCK     ,"BLOCK"),
 	KEYWORD(T_OUTPUT_FMT,"OUTPUT_FORMAT"),
 	KEYWORD(T_OUTPUT    ,"OUTPUT"),
+	KEYWORD(T_FILEHDR   ,"FILEHDR"),
+	KEYWORD(T_AT        ,"AT"),
+	KEYWORD(T_FLAGS     ,"FLAGS"),
 };
 
 const char *token_name(token *t){

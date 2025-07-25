@@ -40,6 +40,9 @@ typedef struct token {
 #define T_COM_END     136
 #define T_OUTPUT_FMT  137
 #define T_OUTPUT      138
+#define T_FILEHDR     139
+#define T_AT          140
+#define T_FLAGS       141
 
 #define ARCH_I386     1
 #define ARCH_X86_64   2
@@ -94,6 +97,10 @@ typedef struct tld_symbol {
 #define TLD_SYM_OBJECT  2
 #define TLD_SYM_SECTION 3
 
+typedef struct tld_phdr {
+	int type;
+	int flags;
+} tld_phdr;
 
 typedef struct tld_file {
 	FILE *file;
@@ -103,6 +110,8 @@ typedef struct tld_file {
 	char *name;
 	size_t symbols_count;
 	tld_symbol *symbols;
+	size_t phdrs_count;
+	tld_phdr *phdrs;
 	size_t entry;
 } tld_file;
 

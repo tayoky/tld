@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tld.h"
+#include "elf.h"
 
 //actual linking
 
@@ -332,6 +333,77 @@ void append_abs(tld_state *state,tld_file *file){
 	}
 }
 
+char *get_string(tld_state *state){
+	token *tok = get_token(state);
+	if(tok->type != T_STR){
+		syntax_error("expected string");
+		exit(EXIT_FAILURE);
+	}
+	char *str = strdup(tok->value);
+	destroy_token(tok);
+	return str;
+}
+
+void parse_phdr(tld_state *state){
+	expect(state,'{');
+	for(;;){
+		token *tok = get_token(state);
+		if(tok->type == '}'){
+			destroy_token(tok);
+			return;
+		} else {
+			unget_token(state,tok);
+		}
+		char *name = get_string(state);
+		char *type  = get_string(state);
+		unsigned long flags = 0;
+		tok = get_token(state);
+		if(tok->type == T_FILEHDR){
+			destroy_token(tok);
+			tok = get_token(state);
+		}
+		if(tok->type == T_PHDR){
+			destroy_token(tok);
+			tok = get_token(state);
+		}
+
+		//TODO : AT maybee ?
+		if(tok->type == T_FLAGS){
+			destroy_token(tok);
+			expect(state,'(');
+			flags = parse_uint(state);
+			expect(state,')');
+			tok = get_token(state);
+		}
+		unget_token(state,tok);
+		expect(state,';');
+
+		int t;
+		if(!strcmp(type,"PT_NULL")){
+			t = PT_NULL;
+		} else	if(!strcmp(type,"PT_LOAD")){
+			t = PT_LOAD;
+		} else	if(!strcmp(type,"PT_DYNAMIC")){
+			t = PT_DYNAMIC;
+		} else	if(!strcmp(type,"PT_INTERP")){
+			t = PT_INTERP;
+		} else	if(!strcmp(type,"PT_NOTE")){
+			t = PT_NOTE;
+		} else	if(!strcmp(type,"PT_SHLIB")){
+			t = PT_SHLIB;
+		} else	if(!strcmp(type,"PT_PHDR")){
+			t = PT_PHDR;
+		} else {
+			syntax_error("invalid phdr type");
+		}
+
+		state->out->phdrs = realloc(state->out->phdrs,(state->out->phdrs_count + 1) * sizeof(tld_phdr));
+		state->out->phdrs[state->out->phdrs_count].type = t;
+		state->out->phdrs[state->out->phdrs_count].flags = flags;
+		state->out->phdrs_count++;
+	}
+}
+
 int linking(tld_state *state){
 	for(size_t i=0; i<state->in_count; i++){
 		append_abs(state,state->in[i]);
@@ -356,15 +428,20 @@ int linking(tld_state *state){
 			break;
 		case T_ENTRY:
 			expect(state,'(');
-			token *entry = get_token(state);
-			if(entry->type != T_STR)syntax_error();
-			state->entry_name = strdup(entry->value);
-			destroy_token(entry);
+			char *entry = get_string(state);
+			if(state->entry_name){
+				free(entry);
+			} else {
+				state->entry_name = entry;
+			}
 			expect(state,')');
 			break;
 		case T_SECTIONS:
 			//TODO :error handling
 			parse_sections(state);
+			break;
+		case T_PHDR:
+			parse_phdr(state);
 			break;
 		case T_EOF:
 			destroy_token(tok);
