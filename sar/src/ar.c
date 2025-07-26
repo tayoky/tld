@@ -6,9 +6,21 @@
 #include <time.h>
 #ifdef __unix__
 #include <sys/stat.h>
+#include <unistd.h>
 #endif
 #include <libgen.h>
 #include "ar.h"
+
+//no cross plateform way to truncate :(
+#ifdef __unix__
+#define trunc(file,size) ftruncate(fileno(file),size)
+#elif defined(_WIN32)
+#define trunc(file,size) _chsize(fileno(file),size)
+#else
+#define trunc(file,size)
+#endif
+
+#define ALIGN(x) (((x)+1)/2*2)
 
 // cute custom perror
 #undef perror
@@ -148,6 +160,15 @@ int main(int argc,char **argv){
 	size_t size = ftell(file);
 	rewind(file);
 
+	//d with no file do nothing
+	if(strchr(argv[1],'d') && argc < 4){
+		return 0;
+	}
+	if((strchr(argv[1],'r') || strchr(argv[1],'q')) && argc < 4){
+		error("no file specified");
+		return EXIT_FAILURE;
+	}
+
 	//for operations on all files
 	fseek(file,SARMAG,SEEK_SET);
 	for(;;){
@@ -168,7 +189,29 @@ int main(int argc,char **argv){
 		if(!contain_file(argc,argv,name) || !strcmp(name,"")){
 			goto skip;
 		}
-		if(strchr(argv[1],'x')){
+		if(strchr(argv[1],'d') || strchr(argv[1],'r')){
+			//delete
+			char buf[4096];
+			fseek(file,-sizeof(header),SEEK_CUR);
+			off_t cont = ftell(file);
+			//now we need to shify cur + len + hdr_sz -> cur
+			off_t dest = ftell(file);
+			off_t src = dest + sizeof(header) + ALIGN(len);
+			for(;;){
+				fseek(file,src,SEEK_SET);
+				size_t r = fread(buf,1,sizeof(buf),file);
+				if(!r)break;
+				src = ftell(file);
+				fseek(file,dest,SEEK_SET);
+				fwrite(buf,r,1,file);
+				dest = ftell(file);
+			}
+			size -= ALIGN(len) + sizeof(header);
+			trunc(file,size);
+			fseek(file,cont,SEEK_SET);
+			goto skip_noseek;
+
+		} else if(strchr(argv[1],'x')){
 			//extract
 			FILE *f = fopen(name,"w");
 			if(!f){
@@ -177,8 +220,7 @@ int main(int argc,char **argv){
 				copy_file(file,len,f);
 				fclose(f);
 			}
-		}
-		if(strchr(argv[1],'t')){
+		} else if(strchr(argv[1],'t')){
 			//print table
 			if(strchr(argv[1],'v')){
 #define MODEC(m,c) putchar(mode & m ? c : '-')
@@ -205,17 +247,14 @@ int main(int argc,char **argv){
 			copy_file(file,len,stdout);
 		}
 skip:
-		free(name);
 		fseek(file,(len + 1)/2 *2,SEEK_CUR);
+skip_noseek:
+		free(name);
 		if(ftell(file) == size)break;
 	}
 
-	if(strchr(argv[1],'q')){
+	if(strchr(argv[1],'q') || strchr(argv[1],'r')){
 		//append files
-		if(argc < 4){
-			error("no file specified");
-			return EXIT_FAILURE;
-		}
 		for(int i=3; i<argc; i++){
 			append_file(file,argv[i]);
 		}
