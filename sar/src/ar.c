@@ -172,6 +172,7 @@ int main(int argc,char **argv){
 	//for operations on all files
 	fseek(file,SARMAG,SEEK_SET);
 	for(;;){
+		if(ftell(file) == size)break;
 		struct ar_hdr header;
 		if(!fread(&header,sizeof(struct ar_hdr),1,file)){
 			perror("read");
@@ -250,7 +251,6 @@ skip:
 		fseek(file,(len + 1)/2 *2,SEEK_CUR);
 skip_noseek:
 		free(name);
-		if(ftell(file) == size)break;
 	}
 
 	if(strchr(argv[1],'q') || strchr(argv[1],'r')){
