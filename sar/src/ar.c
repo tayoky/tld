@@ -4,6 +4,10 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <time.h>
+#ifdef __unix__
+#include <sys/stat.h>
+#endif
+#include <libgen.h>
 #include "ar.h"
 
 // cute custom perror
@@ -47,15 +51,7 @@ long int str2i(char *str,size_t len,int base){
 	return i;
 }
 
-int contain_file(int argc,char **argv,const char *name){
-	if(argc < 4)return 1;
-	for(int i=3; i<argc; i++){
-		if(!strcmp(argv[i],name))return 1;
-	}
-	return 0;
-}
-
-void extract_into(FILE *ar,size_t len,FILE *f){
+void copy_file(FILE *ar,size_t len,FILE *f){
 	char buf[4096];
 	size_t r;
 	size_t total = 0;
@@ -71,6 +67,52 @@ void extract_into(FILE *ar,size_t len,FILE *f){
 }
 
 
+
+void append_file(FILE *ar,const char *path){
+	struct ar_hdr header;
+	memset(&header,' ',sizeof(header));
+	FILE *f = fopen(path,"r");
+	if(!f){
+		perror(path);
+		exit(EXIT_FAILURE);
+	}
+	char *name = strdup(path);
+	strcpy(header.ar_name,basename(name));
+	free(name);
+	header.ar_name[strlen(header.ar_name)] = '/';
+	fseek(f,0,SEEK_END);
+	size_t size = ftell(f);
+	snprintf(header.ar_size,10,"%-10zu",size);
+	memcpy(header.ar_fmag,ARFMAG,2);
+	time_t date = time(NULL);
+	snprintf(header.ar_date,12,"%-12ld",(long)date);
+#ifdef __unix__
+	struct stat st;
+	if(stat(path,&st) < 0){
+		perror(path);
+		exit(EXIT_FAILURE);
+	}
+	snprintf(header.ar_uid,6,"%-6ld",(long)st.st_uid);
+	snprintf(header.ar_gid,6,"%-6ld",(long)st.st_gid);
+	snprintf(header.ar_mode,8,"%-8lo",(long)st.st_mode);
+#endif
+	fwrite(&header,sizeof(header),1,ar);
+	rewind(f);
+	copy_file(f,size,ar);
+	//align on even byte
+	if(size % 2){
+		fputc('\n',ar);
+	}
+	fclose(f);
+}
+
+int contain_file(int argc,char **argv,const char *name){
+	if(argc < 4)return 1;
+	for(int i=3; i<argc; i++){
+		if(!strcmp(argv[i],name))return 1;
+	}
+	return 0;
+}
 int main(int argc,char **argv){
 	if(argc < 3){
 		error("not enought arguments");
@@ -132,7 +174,7 @@ int main(int argc,char **argv){
 			if(!f){
 				perror(name);
 			} else {
-				extract_into(file,len,f);
+				copy_file(file,len,f);
 				fclose(f);
 			}
 		}
@@ -160,12 +202,23 @@ int main(int argc,char **argv){
 			if(strchr(argv[1],'v')){
 				printf("%s:\n",name);
 			}
-			extract_into(file,len,stdout);
+			copy_file(file,len,stdout);
 		}
 skip:
 		free(name);
 		fseek(file,(len + 1)/2 *2,SEEK_CUR);
 		if(ftell(file) == size)break;
+	}
+
+	if(strchr(argv[1],'q')){
+		//append files
+		if(argc < 4){
+			error("no file specified");
+			return EXIT_FAILURE;
+		}
+		for(int i=3; i<argc; i++){
+			append_file(file,argv[i]);
+		}
 	}
 
 	return 0;
