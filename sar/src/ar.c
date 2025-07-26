@@ -55,6 +55,22 @@ int contain_file(int argc,char **argv,const char *name){
 	return 0;
 }
 
+void extract_into(FILE *ar,size_t len,FILE *f){
+	char buf[4096];
+	size_t r;
+	size_t total = 0;
+	while((r = fread(buf,1,(len - total) > sizeof(buf) ? sizeof(buf) : len - total,ar))){
+		fwrite(buf,r,1,f);
+		total += r;
+	}
+	if(total != len){
+		error("file too small");
+		exit(EXIT_FAILURE);
+	}
+	fseek(ar,-len,SEEK_CUR);
+}
+
+
 int main(int argc,char **argv){
 	if(argc < 3){
 		error("not enought arguments");
@@ -110,6 +126,16 @@ int main(int argc,char **argv){
 		if(!contain_file(argc,argv,name) || !strcmp(name,"")){
 			goto skip;
 		}
+		if(strchr(argv[1],'x')){
+			//extract
+			FILE *f = fopen(name,"w");
+			if(!f){
+				perror(name);
+			} else {
+				extract_into(file,len,f);
+				fclose(f);
+			}
+		}
 		if(strchr(argv[1],'t')){
 			//print table
 			if(strchr(argv[1],'v')){
@@ -134,18 +160,7 @@ int main(int argc,char **argv){
 			if(strchr(argv[1],'v')){
 				printf("%s:\n",name);
 			}
-			char buf[4096];
-			size_t r;
-			size_t total = 0;
-			while((r = fread(buf,1,(len - total) > sizeof(buf) ? sizeof(buf) : len - total,file))){
-				fwrite(buf,r,1,stdout);
-				total += r;
-			}
-			if(total != len){
-				error("file too small");
-				return EXIT_FAILURE;
-			}
-			fseek(file,-len,SEEK_CUR);
+			extract_into(file,len,stdout);
 		}
 skip:
 		free(name);
