@@ -9,7 +9,7 @@ PHDRS {
 }
 
 SECTIONS { 
-	. = 0x10000; 
+	. = __tld_cmd_Ttext ; 
 	.text ALIGN(4K) : { 
 		*(.text .text.*) 
 		*(.init .init.*)

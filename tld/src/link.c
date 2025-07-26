@@ -78,6 +78,16 @@ static unsigned long parse_simple_uint(tld_state *state){
 			destroy_token(tok);
 			return state->addr;
 		}
+		if(!strncmp(tok->value,"__tld_cmd_",strlen("__tld_cmd_"))){
+			//command line argument value
+			for(size_t i=0; i<state->linker_opts_count; i++){
+				if(!strcmp(state->linker_opts[i].name,&tok->value[strlen("__tld_cmd_")])){
+					return state->linker_opts[i].value;
+				}
+			}
+			//default value
+			return 0x400000;
+		}
 		//TODO : get symbols value
 		break;
 	case T_ALIGN:

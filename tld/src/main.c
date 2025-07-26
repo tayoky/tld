@@ -108,6 +108,19 @@ void parse_arg(tld_state *state,int argc,char **argv){
 			break;
 		}
 
+		//special case for -Txxx
+		if(argv[i][1] == 'T' && argv[i][2]){
+			if(i + 1 >= argc){
+				error("missing operand");
+				exit(EXIT_FAILURE);
+			}
+			state->linker_opts = realloc(state->linker_opts,(state->linker_opts_count + 1) * sizeof(tld_linker_opt));
+			state->linker_opts[state->linker_opts_count].name = strdup(&argv[i][1]);
+			state->linker_opts[state->linker_opts_count++].value = strtol(argv[i+1],NULL,0);
+			i++;
+			continue;
+		}
+
 		//time to parse arg
 		if(argv[i][1] == '-'){
 			//long option

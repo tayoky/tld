@@ -115,6 +115,11 @@ typedef struct tld_file {
 	size_t entry;
 } tld_file;
 
+typedef struct tld_linker_opt {
+	char *name;
+	size_t value;
+} tld_linker_opt;
+
 typedef struct tld_state {
 	FILE *script;
 	tld_file *out;
@@ -128,6 +133,8 @@ typedef struct tld_state {
 	int flags;
 	int input_format;
 	int output_format;
+	tld_linker_opt *linker_opts;
+	size_t linker_opts_count;
 } tld_state;
 
 #define FLAG_RELOC 0x01
