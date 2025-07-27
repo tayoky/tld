@@ -14,6 +14,7 @@ SECTIONS {
 		*(.text .text.*) 
 		*(.init .init.*)
 		*(.fini .fini.*)
+		*(.eh_frame .eh_frame.*)
 	} 
 	.init_array ALIGN(4K) : {
 		__init_array_start = . ;

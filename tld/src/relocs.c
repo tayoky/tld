@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include "tld.h"
 
+#define SIZE_8  1
+#define SIZE_16 2
+#define SIZE_32 3
+#define SIZE_64 4
+
 static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 	uint32_t A;
 	memcpy(&A,&section->data[reloc->offset],sizeof(uint32_t));
@@ -17,6 +22,73 @@ static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	}
 	memcpy(&section->data[reloc->offset],&result,sizeof(uint32_t));
+}
+
+static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
+	uint64_t A = reloc->addend;
+	uint64_t result;
+	uint64_t S = sym->offset;
+	uint64_t P = section->address + reloc->offset;
+	int size;
+	switch(reloc->type){
+	case R_X86_64_NONE:
+		return;
+	case R_X86_64_64:
+		size = SIZE_64;
+		result = S + A;
+		break;
+	case R_X86_64_PC64:
+		size = SIZE_64;
+		result = S + A - P;
+		break;
+	case R_X86_64_32:
+	case R_X86_64_32S:
+		size = SIZE_32;
+		result = S + A;
+		break;
+	case R_X86_64_PC32:
+		size = SIZE_32;
+		result = S + A - P;
+		break;
+	case R_X86_64_16:
+		size = SIZE_16;
+		result = S + A;
+		break;
+	case R_X86_64_PC16:
+		size = SIZE_16;
+		result = S + A - P;
+		break;
+	case R_X86_64_8:
+		size = SIZE_8;
+		result = S + A;
+		break;
+	case R_X86_64_PC8:
+		size = SIZE_8;
+		result = S + A - P;
+		break;
+	case R_X86_64_GLOB_DAT:
+	case R_X86_64_JUMP_SLOT:
+		size = SIZE_64;
+		result = S;
+		break;
+	}
+	switch(size){
+	case SIZE_64:
+		memcpy(&section->data[reloc->offset],&result,sizeof(uint64_t));
+		break;
+	case SIZE_32:;
+		uint32_t result32 = (uint32_t)result;
+		memcpy(&section->data[reloc->offset],&result32,sizeof(uint32_t));
+	case SIZE_16:;
+		uint16_t result16 = (uint16_t)result;
+		memcpy(&section->data[reloc->offset],&result16,sizeof(uint16_t));
+	case SIZE_8:;
+		uint8_t result8 = (uint8_t)result;
+		memcpy(&section->data[reloc->offset],&result8,sizeof(uint8_t));
+		break;
+	}
+
+	printf("reloc of value %p\n",result);
 }
 
 static void apply_reloc(tld_file *file,tld_section *section,tld_reloc *reloc,int arch){
@@ -36,6 +108,8 @@ static void apply_reloc(tld_file *file,tld_section *section,tld_reloc *reloc,int
 	switch(arch){
 	case ARCH_I386:
 		return i386_reloc(section,reloc,sym);
+	case ARCH_X86_64:
+		return x86_64_reloc(section,reloc,sym);
 	}
 }
 
