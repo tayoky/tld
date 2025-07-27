@@ -96,6 +96,7 @@ typedef struct tld_symbol {
 #define TLD_SYM_FUNC    1
 #define TLD_SYM_OBJECT  2
 #define TLD_SYM_SECTION 3
+#define TLD_SYM_FILE    4
 
 typedef struct tld_phdr {
 	int type;

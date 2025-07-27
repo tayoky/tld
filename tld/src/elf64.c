@@ -133,6 +133,9 @@ int elfxx_load (tld_file *file){
 				case STT_FUNC:
 					file->symbols[file->symbols_count+j].type = TLD_SYM_FUNC;
 					break;
+				case STT_FILE:
+					file->symbols[file->symbols_count+j].type = TLD_SYM_FILE;
+					break;
 				default:
 					file->symbols[file->symbols_count+j].type = TLD_SYM_NOTYPE;
 					break;
@@ -334,6 +337,9 @@ int elfxx_save(tld_file *file,int arch){
 			break;
 		case TLD_SYM_SECTION:
 			type = STT_SECTION;
+			break;
+		case TLD_SYM_FILE:
+			type = STT_FILE;
 			break;
 		default:
 			type = STT_NOTYPE;
