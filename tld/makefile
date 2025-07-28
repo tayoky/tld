@@ -2,22 +2,23 @@ include config.mk
 
 BUILDDIR   = build
 SRCDIR     = src
-INCLUDEDIR = ../include
+INCLUDEDIR = include ../include
+LDDIR      = scripts
 
 VERSION = $(shell git describe --tags --always)
 
 SRC = $(shell find $(SRCDIR) -name "*.c")
 OBJ = $(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 
-CFLAGS += -I$(INCLUDEDIR)
+CFLAGS += $(foreach DIR, $(INCLUDEDIR), -I$(DIR))
 CFLAGS += -DHOST='"$(HOST)"' -DPREFIX='"$(PREFIX)"' -DSYSROOT='"$(SYSROOT)"'
 
-all : $(BUILDDIR)/sar
+all : $(BUILDDIR)/tld
 
-test : $(BUILDDIR)/sar
+test : $(BUILDDIR)/tld
 	@$(CC) -o $@ $^
 
-$(BUILDDIR)/sar : $(OBJ)
+$(BUILDDIR)/tld : $(OBJ)
 	@echo '[linking into $@]'
 	@mkdir -p $(shell dirname $@)
 	@$(CC) -o $@ $^ $(CFLAGS)
@@ -29,11 +30,12 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 	@$(CC) -o $@ -c $^ $(CFLAGS)
 
 install : all
-	@echo '[installing sar]'
-	@mkdir -p $(PREFIX)/bin
-	@cp $(BUILDDIR)/sar $(PREFIX)/bin/sar
+	@echo '[installing tld]'
+	@mkdir -p $(PREFIX)/bin $(PREFIX)/lib/tld/
+	@cp $(BUILDDIR)/tld $(PREFIX)/bin/tld
+	@cp $(LDDIR)/*.ld $(PREFIX)/lib/tld
 uninstall :
-	rm -rf $(PREFIX)/bin/sar
+	rm -rf $(PREFIX)/bin/tld $(PREFIX)/lib/tld
 
 clean :
 	rm -fr build
@@ -41,4 +43,4 @@ clean :
 config.mk :
 	$(error run ./configure before running make)
 
-.PHONY : all $(BUILDIR)/sar install uninstall clean
+.PHONY : all $(BUILDIR)/tld install uninstall clean

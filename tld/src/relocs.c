@@ -87,8 +87,9 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		memcpy(&section->data[reloc->offset],&result8,sizeof(uint8_t));
 		break;
 	}
-
-	printf("reloc of value %p\n",result);
+#ifdef DEBUG
+	printf("reloc of value %lx at %lx\n",result,P);
+#endif
 }
 
 static void apply_reloc(tld_file *file,tld_section *section,tld_reloc *reloc,int arch){

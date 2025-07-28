@@ -68,7 +68,7 @@ int elfxx_load (tld_file *file){
 			free(shstrtab);
 			return -1;
 		}
-		printf("find section %s of size %lu\n",&shstrtab[sheader.sh_name],sheader.sh_size);
+		printf("find section %s of size %zu\n",&shstrtab[sheader.sh_name],(size_t)sheader.sh_size);
 		file->sections[i].size = sheader.sh_size;
 		file->sections[i].name = strdup(&shstrtab[sheader.sh_name]);
 		file->sections[i].data = malloc(sheader.sh_size);
@@ -188,7 +188,7 @@ int elfxx_load (tld_file *file){
 				section->relocs[j].type   = ELF_R_TYPE(relocs[j].r_info);
 			//TODO : better way of finding symbol ?
 				section->relocs[j].symbol = &file->symbols[ELF_R_SYM(relocs[j].r_info)];
-				printf("find reloc of type %lu linked with %s\n",ELF_R_TYPE(relocs[j].r_info),section->relocs[j].symbol->name);
+				printf("find reloc of type %u linked with %s\n",(unsigned int)ELF_R_TYPE(relocs[j].r_info),section->relocs[j].symbol->name);
 			}
 		} else {
 			Elf_Rel *relocs = (void *)file->sections[i].data;
@@ -198,7 +198,7 @@ int elfxx_load (tld_file *file){
 				section->relocs[j].type   = ELF_R_TYPE(relocs[j].r_info);
 			//TODO : better way of finding symbol ?
 				section->relocs[j].symbol = &file->symbols[ELF_R_SYM(relocs[j].r_info)];
-				printf("find reloc of type %lu linked with %s\n",ELF_R_TYPE(relocs[j].r_info),section->relocs[j].symbol->name);
+				printf("find reloc of type %u linked with %s\n",(unsigned int)ELF_R_TYPE(relocs[j].r_info),section->relocs[j].symbol->name);
 			}
 		}
 	}
