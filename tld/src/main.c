@@ -37,6 +37,14 @@ void set_script(tld_state *state,char *arg){
 	}
 }
 
+void set_entry(tld_state *state,char *arg){
+	if(state->entry_name){
+		error("only one entry can be specfied");
+		exit(EXIT_FAILURE);
+	}
+	state->entry_name = strdup(arg);
+}
+
 void set_arch(tld_state *state,const char *arg){
 	if(!strcasecmp(arg,"x86_64")){
 		state->arch = ARCH_X86_64;
@@ -86,6 +94,7 @@ option options[] = {
 	OPTA('A',"--architecture",set_arch),
 	OPTA('n',"--format",set_format),
 	OPTA(0,"--oformat",set_out_format),
+	OPTA(0,"--entry",set_entry),
 	OPT ('r',"--relocatable",FLAG_RELOC),
 };
 
