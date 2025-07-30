@@ -12,7 +12,7 @@ static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 	memcpy(&A,&section->data[reloc->offset],sizeof(uint32_t));
 	uint32_t result;
 	uint32_t S = sym->offset;
-	uint32_t P = section->address + reloc->offset + sizeof(result);
+	uint32_t P = section->address + reloc->offset;
 	switch(reloc->type){
 	case R_386_32:
 		result = S + A;
@@ -23,7 +23,7 @@ static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 	}
 	memcpy(&section->data[reloc->offset],&result,sizeof(result));
 #ifdef DEBUG
-	printf("reloc of value %lx at %lx with %s\n",result,P-sizeof(result),sym->name);
+	printf("reloc of value %lx at %lx with %s\n",result,P,sym->name);
 #endif
 }
 
@@ -42,7 +42,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC64:
 		size = SIZE_64;
-		result = S + A - P - sizeof(uint64_t);
+		result = S + A - P;
 		break;
 	case R_X86_64_32:
 	case R_X86_64_32S:
@@ -51,7 +51,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC32:
 		size = SIZE_32;
-		result = S + A - P - sizeof(uint32_t);
+		result = S + A - P;
 		break;
 	case R_X86_64_16:
 		size = SIZE_16;
@@ -59,7 +59,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC16:
 		size = SIZE_16;
-		result = S + A - P - sizeof(uint16_t);
+		result = S + A - P;
 		break;
 	case R_X86_64_8:
 		size = SIZE_8;
@@ -67,7 +67,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC8:
 		size = SIZE_8;
-		result = S + A - P - sizeof(uint8_t);
+		result = S + A - P;
 		break;
 	case R_X86_64_GLOB_DAT:
 	case R_X86_64_JUMP_SLOT:
