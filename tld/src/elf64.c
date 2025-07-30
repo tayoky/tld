@@ -243,11 +243,11 @@ int elfxx_save(tld_file *file,int arch){
 	header.e_type = ET_EXEC;
 	header.e_entry = file->entry;
 	header.e_phentsize = sizeof(Elf_Phdr);
-	header.e_phnum = file->sections_count + 1;
+	header.e_phnum = file->phdrs_count + 1;
 	header.e_phoff = sizeof(header);
 	header.e_shentsize = sizeof(Elf_Shdr);
 	header.e_shnum = file->sections_count + 3;
-	header.e_shoff = sizeof(header) + sizeof(Elf_Phdr) * (file->sections_count + 1);
+	header.e_shoff = sizeof(header) + sizeof(Elf_Phdr) * (file->phdrs_count + 1);
 	header.e_shstrndx = file->sections_count + 2;
 	if(!fwrite(&header,sizeof(header),1,file->file))return -1;
 
@@ -257,24 +257,28 @@ int elfxx_save(tld_file *file,int arch){
 	size_t strtab_len = 1;
 
 	//write phdr
-	off_t offset = sizeof(header) + (sizeof(Elf_Phdr) + sizeof(Elf_Shdr)) * (file->sections_count + 1 ) + sizeof(Elf_Shdr) * 2;
 	Elf_Phdr pheader;
 	memset(&pheader,0,sizeof(pheader));
 	fwrite(&pheader,sizeof(pheader),1,file->file);
-	for(size_t i=0; i<file->sections_count; i++){
+	for(size_t i=0; i<file->phdrs_count; i++){
 		memset(&pheader,0,sizeof(pheader));
-		pheader.p_type = PT_LOAD;
-		pheader.p_memsz = file->sections[i].size;
-		pheader.p_filesz = pheader.p_memsz;
+		pheader.p_type = file->phdrs[i].type;
+		pheader.p_memsz = file->phdrs[i].sections_count == 0 ? 0 : 
+			file->sections[file->phdrs[i].first_section + file->phdrs[i].sections_count-1].address + 
+			file->sections[file->phdrs[i].first_section + file->phdrs[i].sections_count-1].size - 
+			file->sections[file->phdrs[i].first_section].address;
+		off_t offset = sizeof(header) + sizeof(Elf_Phdr) * (file->phdrs_count + 1) + sizeof(Elf_Shdr) * (file->sections_count + 3);
+		for(size_t j=0; j<file->phdrs[i].first_section; j++){
+			offset += file->sections[j].size;
+		}
 		pheader.p_offset = offset;
-		pheader.p_vaddr = file->sections[i].address;
-		pheader.p_flags = PF_R | PF_W | PF_X;
-		offset += pheader.p_filesz;
+		pheader.p_vaddr = file->phdrs[i].sections_count == 0 ? 0 : file->sections[file->phdrs[i].first_section].address;
+		pheader.p_flags = file->phdrs[i].flags;
 		fwrite(&pheader,sizeof(pheader),1,file->file);
 	}
 
 	//write shdr
-	offset = sizeof(header) + (sizeof(Elf_Phdr) + sizeof(Elf_Shdr)) * (file->sections_count + 1 ) + sizeof(Elf_Shdr) * 2;
+	off_t offset = sizeof(header) + sizeof(Elf_Phdr) * (file->phdrs_count + 1) + sizeof(Elf_Shdr) * (file->sections_count + 3);
 	Elf_Shdr sheader;
 	memset(&sheader,0,sizeof(sheader));
 	fwrite(&sheader,sizeof(sheader),1,file->file);
@@ -283,6 +287,7 @@ int elfxx_save(tld_file *file,int arch){
 		memset(&sheader,0,sizeof(sheader));
 		sheader.sh_type = SHT_PROGBITS;
 		sheader.sh_size = file->sections[i].size;
+		sheader.sh_addr = file->sections[i].address;
 		sheader.sh_name = strtab_len;
 		add_string(file->sections[i].name);
 		sheader.sh_offset = offset;

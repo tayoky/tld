@@ -3,8 +3,7 @@ ENTRY(_start)
 PHDRS {
 	text    PT_LOAD    FLAGS(0x5);
 	data    PT_LOAD    FLAGS(0x6);
-	interp  PT_INTERP ;
-	dynamic PT_DYNAMIC ;
+	bss     PT_LOAD    FLAGS(0x6);
 	note    PT_NOTE ;
 }
 
@@ -15,22 +14,22 @@ SECTIONS {
 		*(.init .init.*)
 		*(.fini .fini.*)
 		*(.eh_frame .eh_frame.*)
-	} 
-	.init_array ALIGN(4K) : {
+	} : text
+	.init_array : {
 		__init_array_start = . ;
 		*(.init_array .init_array.*)
 		__init_array_end = . ;
-	}
-	.fini_array ALIGN(4K) : {
+	} : text
+	.fini_array : {
 		__fini_array_start = . ;
 		*(.fini_array .fini_array.*)
 		__fini_array_end = . ;
-	}
+	} : text
 	.data ALIGN(4K) : { 
 		*(.data .data.*)
 		*(.rodata .rodata.*)
-	} 
+	} : data
 	.bss ALIGN(4K) : { 
 		*(.bss)
-	} 
+	} : bss
 }

@@ -5,8 +5,7 @@
 
 //actual linking
 
-#define syntax_error(str) {error("%s : linker script syntax error at %d",__func__,state->line);}
-
+#define syntax_error(...) {error("%s : linker script syntax error at %d",__func__,state->line);}
 token *get_token(tld_state *state){
 	if(state->unget){
 		token *tok = state->unget;
@@ -29,6 +28,18 @@ token *get_token(tld_state *state){
 
 void unget_token(tld_state *state,token *tok){
 	state->unget = tok;
+}
+
+
+char *get_string(tld_state *state){
+	token *tok = get_token(state);
+	if(tok->type != T_STR){
+		syntax_error("expected string");
+		exit(EXIT_FAILURE);
+	}
+	char *str = strdup(tok->value);
+	destroy_token(tok);
+	return str;
 }
 
 int expect(tld_state *state,int type){
@@ -298,12 +309,39 @@ int parse_output_section(tld_state *state,const char *name){
 			break;
 		case '}':
 			destroy_token(tok);
-			goto ret;
+			goto end;
 		}
 		destroy_token(tok);
 	}	
-ret:
+end:
 	state->addr += state->out->sections[state->out->sections_count-1].size;
+	tok = get_token(state);
+	while(tok->type == ':'){
+		char *ph_name= get_string(state);
+		destroy_token(tok);
+		tok = get_token(state);
+		if(!ph_name)continue;
+		for(size_t i=0; i<state->out->phdrs_count; i++){
+			if(!strcmp(ph_name,state->out->phdrs[i].name)){
+				if(state->out->phdrs[i].sections_count){
+					if(state->out->phdrs[i].first_section + state->out->phdrs[i].sections_count != state->out->sections_count - 1){
+						syntax_error("uncontinued phdr");
+					}
+				} else {
+					state->out->phdrs[i].first_section = state->out->sections_count - 1;
+				}
+				state->out->phdrs[i].sections_count++;
+				goto next;
+			}
+		}
+		syntax_error("unknow phdr '%s'",ph_name);
+		exit(EXIT_FAILURE);
+next:
+		continue;
+
+	}
+	unget_token(state,tok);
+
 	return 0;
 }
 
@@ -347,17 +385,6 @@ void append_abs(tld_state *state,tld_file *file){
 		sym->flags  = file->symbols[i].flags;
 		file->symbols[i].linked = sym - state->out->symbols;
 	}
-}
-
-char *get_string(tld_state *state){
-	token *tok = get_token(state);
-	if(tok->type != T_STR){
-		syntax_error("expected string");
-		exit(EXIT_FAILURE);
-	}
-	char *str = strdup(tok->value);
-	destroy_token(tok);
-	return str;
 }
 
 void parse_phdr(tld_state *state){
@@ -412,10 +439,13 @@ void parse_phdr(tld_state *state){
 		} else {
 			syntax_error("invalid phdr type");
 		}
+		free(type);
 
 		state->out->phdrs = realloc(state->out->phdrs,(state->out->phdrs_count + 1) * sizeof(tld_phdr));
+		memset(&state->out->phdrs[state->out->phdrs_count],0,sizeof(tld_phdr));
 		state->out->phdrs[state->out->phdrs_count].type = t;
 		state->out->phdrs[state->out->phdrs_count].flags = flags;
+		state->out->phdrs[state->out->phdrs_count].name = name;
 		state->out->phdrs_count++;
 	}
 }

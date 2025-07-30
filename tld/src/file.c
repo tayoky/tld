@@ -62,6 +62,20 @@ void tld_close_file(tld_file *file){
 }
 
 int tld_save_file(tld_file *file,int format,int arch){
+	if(!file->phdrs){
+		//no phdrs ?
+		//generate default one
+		file->phdrs_count = file->sections_count;
+		file->phdrs = calloc(file->phdrs_count,sizeof(tld_phdr));
+		for(size_t i=0; i<file->phdrs_count; i++){
+			file->phdrs[i].name = strdup(file->sections[i].name);
+			file->phdrs[i].flags = 0x7;
+			file->phdrs[i].type = 1;
+			file->phdrs[i].sections_count = 0;
+			file->phdrs[i].first_section = i;
+		}
+	}
+
 	switch(format){
 	case FORMAT_ELF64:
 		return elf64_save(file,arch);

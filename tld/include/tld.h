@@ -101,6 +101,9 @@ typedef struct tld_symbol {
 typedef struct tld_phdr {
 	int type;
 	int flags;
+	size_t sections_count;
+	size_t first_section;
+	char *name;
 } tld_phdr;
 
 typedef struct tld_file {
