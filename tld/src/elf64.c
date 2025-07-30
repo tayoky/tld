@@ -229,6 +229,7 @@ int elfxx_save(tld_file *file,int arch){
 	header.e_ident[EI_VERSION] = EV_CURRENT;
 	header.e_ident[EI_CLASS]   = ELFCLASSXX;
 	header.e_ident[EI_DATA]    = ELFDATA2LSB;
+	header.e_version = EV_CURRENT;
 	switch(arch){
 	case ARCH_I386:
 		header.e_machine = EM_386;
