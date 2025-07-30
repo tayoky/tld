@@ -70,6 +70,7 @@ int elfxx_load (tld_file *file){
 		}
 		printf("find section %s of size %zu\n",&shstrtab[sheader.sh_name],(size_t)sheader.sh_size);
 		file->sections[i].size = sheader.sh_size;
+		file->sections[i].align = sheader.sh_addralign;
 		file->sections[i].name = strdup(&shstrtab[sheader.sh_name]);
 		file->sections[i].data = malloc(sheader.sh_size);
 		if(sheader.sh_flags & SHF_ALLOC){
@@ -272,6 +273,8 @@ int elfxx_save(tld_file *file,int arch){
 			offset += file->sections[j].size;
 		}
 		pheader.p_offset = offset;
+		//FIXME : this won't work for bss
+		pheader.p_filesz  = pheader.p_memsz;
 		pheader.p_vaddr = file->phdrs[i].sections_count == 0 ? 0 : file->sections[file->phdrs[i].first_section].address;
 		pheader.p_flags = file->phdrs[i].flags;
 		fwrite(&pheader,sizeof(pheader),1,file->file);
@@ -285,9 +288,19 @@ int elfxx_save(tld_file *file,int arch){
 	for(size_t i=0; i<file->sections_count; i++){
 		Elf_Shdr sheader;
 		memset(&sheader,0,sizeof(sheader));
-		sheader.sh_type = SHT_PROGBITS;
+		sheader.sh_type = file->sections[i].flags & TLD_SEC_NOBIT ? SHT_NOBITS : SHT_PROGBITS;
+		if(file->sections[i].flags & TLD_SEC_R){
+			sheader.sh_flags |= SHF_ALLOC;
+		}
+		if(file->sections[i].flags & TLD_SEC_W){
+			sheader.sh_flags |= SHF_WRITE;
+		}
+		if(file->sections[i].flags & TLD_SEC_X){
+			sheader.sh_flags |= SHF_EXECINSTR;
+		}
 		sheader.sh_size = file->sections[i].size;
 		sheader.sh_addr = file->sections[i].address;
+		sheader.sh_addralign = file->sections[i].align;
 		sheader.sh_name = strtab_len;
 		add_string(file->sections[i].name);
 		sheader.sh_offset = offset;

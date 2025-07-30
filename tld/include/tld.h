@@ -68,6 +68,7 @@ typedef struct tld_section {
 	size_t relocs_count;
 	tld_reloc *relocs;
 	int flags;
+	size_t align;
 } tld_section;
 
 #define TLD_SEC_R     0x01

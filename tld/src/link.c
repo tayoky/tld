@@ -191,6 +191,21 @@ int parse_symbol(tld_state *state,const char *name){
 }
 
 static void append_section(tld_state *state,tld_file *input_file,tld_section *input,tld_section *output){
+	//align the section
+	if(input->align){
+		size_t align = (output->address + output->size) % input->align;
+		if(align){
+			output->data = realloc(output->data,output->size + input->align - align);
+			memset(&output->data[output->size],0,input->align - align);
+			output->size += input->align - align;
+		}
+	}
+	//add flags
+	output->flags |= input->flags & (TLD_SEC_R | TLD_SEC_W | TLD_SEC_X);
+	if(!(input->flags & TLD_SEC_NOBIT)){
+		output->flags &= ~TLD_SEC_NOBIT;
+	}
+
 	//append relocations
 	output->relocs = realloc(output->relocs,(output->relocs_count + input->relocs_count) * sizeof(tld_reloc));
 	for(size_t i=0; i<input->relocs_count; i++){
@@ -270,6 +285,8 @@ int parse_output_section(tld_state *state,const char *name){
 	state->out->sections = realloc(state->out->sections,(++state->out->sections_count) * sizeof(tld_section));
 	memset(&state->out->sections[state->out->sections_count-1],0,sizeof(tld_section));
 	state->out->sections[state->out->sections_count-1].name = strdup(name);
+	state->out->sections[state->out->sections_count-1].flags = TLD_SEC_NOBIT;
+	state->out->sections[state->out->sections_count-1].align = 1;
 	token *tok = get_token(state);
 	if(tok->type != ':' && tok->type != '('){
 		//address
