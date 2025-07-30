@@ -42,7 +42,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC64:
 		size = SIZE_64;
-		result = S + A - P;
+		result = S + A - P - sizeof(uint64_t);
 		break;
 	case R_X86_64_32:
 	case R_X86_64_32S:
@@ -51,7 +51,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC32:
 		size = SIZE_32;
-		result = S + A - P;
+		result = S + A - P - sizeof(uint32_t);
 		break;
 	case R_X86_64_16:
 		size = SIZE_16;
@@ -59,7 +59,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC16:
 		size = SIZE_16;
-		result = S + A - P;
+		result = S + A - P - sizeof(uint16_t);
 		break;
 	case R_X86_64_8:
 		size = SIZE_8;
@@ -67,7 +67,7 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		break;
 	case R_X86_64_PC8:
 		size = SIZE_8;
-		result = S + A - P;
+		result = S + A - P - sizeof(uint8_t);
 		break;
 	case R_X86_64_GLOB_DAT:
 	case R_X86_64_JUMP_SLOT:
