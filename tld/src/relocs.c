@@ -12,7 +12,7 @@ static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 	memcpy(&A,&section->data[reloc->offset],sizeof(uint32_t));
 	uint32_t result;
 	uint32_t S = sym->offset;
-	uint32_t P = section->address + reloc->offset;
+	uint32_t P = section->address + reloc->offset + sizeof(result);
 	switch(reloc->type){
 	case R_386_32:
 		result = S + A;
@@ -21,7 +21,10 @@ static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 		result = S + A - P;
 		break;
 	}
-	memcpy(&section->data[reloc->offset],&result,sizeof(uint32_t));
+	memcpy(&section->data[reloc->offset],&result,sizeof(result));
+#ifdef DEBUG
+	printf("reloc of value %lx at %lx with %s\n",result,P-sizeof(result),sym->name);
+#endif
 }
 
 static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
