@@ -82,9 +82,11 @@ static void x86_64_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 	case SIZE_32:;
 		uint32_t result32 = (uint32_t)result;
 		memcpy(&section->data[reloc->offset],&result32,sizeof(uint32_t));
+		break;
 	case SIZE_16:;
 		uint16_t result16 = (uint16_t)result;
 		memcpy(&section->data[reloc->offset],&result16,sizeof(uint16_t));
+		break;
 	case SIZE_8:;
 		uint8_t result8 = (uint8_t)result;
 		memcpy(&section->data[reloc->offset],&result8,sizeof(uint8_t));
