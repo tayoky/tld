@@ -23,7 +23,7 @@ static void i386_reloc(tld_section *section,tld_reloc *reloc,tld_symbol *sym){
 	}
 	memcpy(&section->data[reloc->offset],&result,sizeof(result));
 #ifdef DEBUG
-	printf("reloc of value %lx at %lx with %s\n",result,P,sym->name);
+	printf("reloc of value %x at %x with %s\n",result,P,sym->name);
 #endif
 }
 

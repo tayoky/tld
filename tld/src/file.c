@@ -82,7 +82,7 @@ int tld_save_file(tld_file *file,int format,int arch){
 	case FORMAT_ELF32:
 		return elf32_save(file,arch);
 	case FORMAT_BINARY:
-		return bin_save(file,arch);
+		return bin_save(file);
 	default:
 		errno = EINVAL;
 		return -1;

@@ -64,7 +64,7 @@ int get_op_level(token *op){
 		{'|',0},
 		//lower
 	};
-	for(int i = 0; i<arraylen(ops); i++){
+	for(size_t i = 0; i<arraylen(ops); i++){
 		for(int j=0;ops[i][j]; j++){
 			if(op->type == ops[i][j]){
 				return i;
@@ -455,6 +455,7 @@ void parse_phdr(tld_state *state){
 			t = PT_PHDR;
 		} else {
 			syntax_error("invalid phdr type");
+			exit(EXIT_FAILURE);
 		}
 		free(type);
 

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "tld.h"
 
-int bin_save(tld_file *file,int arch){
+int bin_save(tld_file *file){
 	//sections are already sorted for us
 	//so easy pz
 	

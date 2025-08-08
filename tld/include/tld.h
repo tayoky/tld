@@ -157,7 +157,7 @@ int elf64_load(tld_file *file);
 int elf32_load(tld_file *file);
 int elf64_save(tld_file *file,int arch);
 int elf32_save(tld_file *file,int arch);
-int bin_save(tld_file *file,int arch);
+int bin_save(tld_file *file);
 int str2format(const char *str);
 tld_symbol *tld_get_sym(tld_file *file,const char *name);
 
