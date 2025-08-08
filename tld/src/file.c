@@ -71,7 +71,7 @@ int tld_save_file(tld_file *file,int format,int arch){
 			file->phdrs[i].name = strdup(file->sections[i].name);
 			file->phdrs[i].flags = 0x7;
 			file->phdrs[i].type = 1;
-			file->phdrs[i].sections_count = 0;
+			file->phdrs[i].sections_count = 1;
 			file->phdrs[i].first_section = i;
 		}
 	}
