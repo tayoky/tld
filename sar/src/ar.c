@@ -10,6 +10,7 @@
 #endif
 #include <libgen.h>
 #include "ar.h"
+#include "libttc.h"
 
 //no cross plateform way to truncate :(
 #ifdef __unix__
@@ -22,19 +23,9 @@
 
 #define ALIGN(x) (((x)+1)/2*2)
 
-// cute custom perror
-#undef perror
-#define perror(str) error("%s : %s",str,strerror(errno))
 #define warning error
 
-void error(const char *fmt,...){
-	va_list args;
-	va_start(args,fmt);
-	fputs("sar : ",stderr);
-	vfprintf(stderr,fmt,args);
-	fputc('\n',stderr);
-	va_end(args);
-}
+const char *progname = "sar";
 
 char *get_name(struct ar_hdr *header){
 	if(memchr(header->ar_name,'/',sizeof(header->ar_name))){

@@ -4,6 +4,7 @@
 #include <libgen.h>
 #include "elf.h"
 #include "tld.h"
+#include "libttc.h"
 
 //top domain file management and abstraction
 

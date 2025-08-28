@@ -84,7 +84,3 @@ echo "PREFIX=$PREFIX" >> config.mk
 echo "CC=$CC" >> config.mk
 echo "CFLAGS=$CFLAGS $OPT" >> config.mk
 echo "SYSROOT=$SYSROOT"  >> config.mk
-
-cp config.mk tld
-cp config.mk sar
-cp config.mk libttc

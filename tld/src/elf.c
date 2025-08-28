@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "tld.h"
+#include "libttc.h"
 
 //generic driver for elf files
 

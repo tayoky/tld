@@ -21,7 +21,7 @@ test : $(BUILDDIR)/tld
 $(BUILDDIR)/tld : $(OBJ)
 	@echo '[linking into $@]'
 	@mkdir -p $(shell dirname $@)
-	@$(CC) -o $@ $^ $(CFLAGS)
+	@$(CC) -o $@ $^ $(CFLAGS) -L../libttc/build -lttc
 
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.c 

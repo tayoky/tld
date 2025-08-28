@@ -169,8 +169,4 @@ int glob_path_match(const char *patern,const char *str);
 
 #define arraylen(array) (sizeof(array)/sizeof(*array))
 
-// cute custom perror
-#undef perror
-#define perror(str) error("%s : %s",str,strerror(errno))
-
 #endif

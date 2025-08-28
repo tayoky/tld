@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "tld.h"
+#include "libttc.h"
 
 #define SIZE_8  1
 #define SIZE_16 2

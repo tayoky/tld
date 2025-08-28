@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "tld.h"
+#include "libttc.h"
 
 typedef struct option {
 	const char *option;
@@ -13,6 +14,8 @@ typedef struct option {
 
 #define OPT(s,l,f) {.opt = s,.option = l,.flag = f}
 #define OPTA(s,l,f) {.opt = s,.option = l,.func = (void *)f}
+
+const char *progname = "tld";
 
 void set_output(tld_state *state,char *arg){
 	if(state->out){

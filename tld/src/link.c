@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "tld.h"
 #include "elf.h"
+#include "libttc.h"
 
 //actual linking
 

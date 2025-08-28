@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "tld.h"
+#include "libttc.h"
 
 int bin_save(tld_file *file){
 	//sections are already sorted for us

@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "tld.h"
+#include "libttc.h"
 
 #ifndef BITS
 #define BITS 64

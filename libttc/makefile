@@ -1,4 +1,4 @@
-include config.mk
+include ../config.mk
 
 BUILDDIR   = build
 SRCDIR     = src
@@ -12,15 +12,12 @@ OBJ = $(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
 CFLAGS += -I$(INCLUDEDIR)
 CFLAGS += -DHOST='"$(HOST)"' -DPREFIX='"$(PREFIX)"' -DSYSROOT='"$(SYSROOT)"'
 
-all : $(BUILDDIR)/sar
+all : $(BUILDDIR)/libttc.a
 
-test : $(BUILDDIR)/sar
-	@$(CC) -o $@ $^
-
-$(BUILDDIR)/sar : $(OBJ)
-	@echo '[linking into $@]'
+$(BUILDDIR)/libttc.a : $(OBJ)
+	@echo '[archiving into $@]'
 	@mkdir -p $(shell dirname $@)
-	@$(CC) -o $@ $^ $(CFLAGS) -L../libttc/build -lttc
+	@$(AR) rcs $@ $^ 
 
 
 $(BUILDDIR)/%.o : $(SRCDIR)/%.c 
@@ -28,17 +25,10 @@ $(BUILDDIR)/%.o : $(SRCDIR)/%.c
 	@mkdir -p $(shell dirname $@)
 	@$(CC) -o $@ -c $^ $(CFLAGS)
 
-install : all
-	@echo '[installing sar]'
-	@mkdir -p $(PREFIX)/bin
-	@cp $(BUILDDIR)/sar $(PREFIX)/bin/sar
-uninstall :
-	rm -rf $(PREFIX)/bin/sar
-
 clean :
 	rm -fr build
 
 config.mk :
 	$(error run ./configure before running make)
 
-.PHONY : all $(BUILDIR)/sar install uninstall clean
+.PHONY : all $(BUILDIR)/libttc.a clean
