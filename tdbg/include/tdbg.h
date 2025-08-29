@@ -11,6 +11,7 @@ typedef int pid_t;
 typedef struct tdbg_state {
 	pid_t tracee;
 	char **exe_args;
+	int sig_handle;
 } tdbg_state;
 
 typedef struct tdbg_cmd {

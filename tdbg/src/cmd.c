@@ -23,21 +23,23 @@ void cont(tdbg_state *ctx){
 		return;
 	}
 	int status;
-	ptrace(PTRACE_CONT,ctx->tracee,0,0);
+	ptrace(PTRACE_CONT,ctx->tracee,0,ctx->sig_handle);
+	ctx->sig_handle = 0;
 	if(waitpid(ctx->tracee,&status,0) < 0){
 		perror("waitpid");
 		return;
 	}
 	if(WIFEXITED(status)){
-		printf("exit with status %d\n",WEXITSTATUS(status));
+		printf("process exit with status %d\n",WEXITSTATUS(status));
 		ctx->tracee = 0;
 	}
 	if(WIFSIGNALED(status)){
-		printf("killed by signal %s\n",strsignal(WTERMSIG(status)));
+		printf("process killed by signal %s\n",strsignal(WTERMSIG(status)));
 		ctx->tracee = 0;
 	}
 	if(WIFSTOPPED(status)){
-		printf("stopped by signal %s\n",strsignal(WSTOPSIG(status)));
+		printf("process recevied signal %s\n",strsignal(WSTOPSIG(status)));
+		ctx->sig_handle = WSTOPSIG(status);
 	}
 }
 
