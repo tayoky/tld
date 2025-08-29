@@ -16,6 +16,46 @@ void quit(tdbg_state *ctx,int argc,char **argv){
 	exit(0);
 }
 
+//continue until event
+void cont(tdbg_state *ctx){
+	if(!ctx->tracee){
+		error("no process to trace");
+		return;
+	}
+	int status;
+	ptrace(PTRACE_CONT,ctx->tracee,0,0);
+	if(waitpid(ctx->tracee,&status,0) < 0){
+		perror("waitpid");
+		return;
+	}
+	if(WIFEXITED(status)){
+		printf("exit with status %d\n",WEXITSTATUS(status));
+		ctx->tracee = 0;
+	}
+	if(WIFSIGNALED(status)){
+		printf("killed by signal %s\n",strsignal(WTERMSIG(status)));
+		ctx->tracee = 0;
+	}
+	if(WIFSTOPPED(status)){
+		printf("stopped by signal %s\n",strsignal(WSTOPSIG(status)));
+	}
+}
+
+void c(tdbg_state *ctx,int argc,char **argv){
+	long times = 1;
+	if(argc > 2){
+		error("too many argument");
+		return;
+	} else if(argc == 2){
+		//TODO : use strtol or expr evaluator
+		times = atoi(argv[1]);
+	}
+	while(times > 0){
+		cont(ctx);
+		times--;
+	}
+}
+
 void run(tdbg_state *ctx,int argc,char **argv){
 	if(ctx->tracee){
 		error("already tracing a process");
@@ -68,33 +108,15 @@ void run(tdbg_state *ctx,int argc,char **argv){
 	}
 
 	printf("trace %ld\n",(long)child);
-	if(ptrace(PTRACE_CONT,child,0,0) < 0){
-		perror("ptrace");
-		kill(child,SIGKILL);
-		return;
-	}
 
-	//now wait
 	ctx->tracee = child;
-	for(;;){
-		if(waitpid(ctx->tracee,&status,0) < 0){
-			perror("waitpid");
-			return;
-		}
-		if(WIFEXITED(status)){
-			printf("exit with status %d\n",WEXITSTATUS(status));
-			return;
-		}
-		if(WIFSIGNALED(status)){
-			printf("recive %s\n",strsignal(WEXITSTATUS(status)));
-			ptrace(PTRACE_CONT,child,0,0);
-		}
-	}
+	cont(ctx);
 }
 
 tdbg_cmd commands[] = {
 	CMD(quit,"quit","q","exit"),
 	CMD(run ,"run"),
+	CMD(c   ,"continue","c"),
 };
 
 void cmd(tdbg_state *ctx,char *buf){
