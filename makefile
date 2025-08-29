@@ -1,8 +1,8 @@
 export DESTDIR
 
-all : build-tld build-sar
-install : install-tld install-sar
-clean : clean-tld clean-sar clean-libttc
+all : build-tld build-sar build-tdbg
+install : install-tld install-sar install-tdbg
+clean : clean-tld clean-sar clean-tdbg clean-libttc
 
 build-libttc :
 	@$(MAKE) -C libttc
@@ -27,4 +27,14 @@ install-sar : build-libttc
 
 clean-sar :
 	@$(MAKE) -C sar clean
+
+build-tdbg : build-libttc
+	@$(MAKE) -C tdbg
+
+install-tdbg : build-libttc
+	@$(MAKE) -C tdbg install
+
+clean-tdbg :
+	@$(MAKE) -C tdbg clean
+
 .PHONY : all install clean build-% install-% clean-%

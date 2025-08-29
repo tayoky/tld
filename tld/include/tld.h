@@ -167,6 +167,4 @@ void tld_apply_relocations(tld_file *file,int arch);
 int glob_match(const char *patern,const char *str);
 int glob_path_match(const char *patern,const char *str);
 
-#define arraylen(array) (sizeof(array)/sizeof(*array))
-
 #endif
