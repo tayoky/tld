@@ -35,15 +35,22 @@ void cont(tdbg_state *ctx,int action){
 	if(WIFEXITED(status)){
 		printf("process exit with status %d\n",WEXITSTATUS(status));
 		ctx->tracee = 0;
+		return;
 	}
 	if(WIFSIGNALED(status)){
 		printf("process killed by signal %s\n",strsignal(WTERMSIG(status)));
 		ctx->tracee = 0;
+		return;
 	}
 	if(WIFSTOPPED(status)){
-		printf("process recevied signal %s\n",strsignal(WSTOPSIG(status)));
-		ctx->sig_handle = WSTOPSIG(status);
+		//do not print and send signal SIGTRAP if use special cont like SINGLESTEP or SYSCALL
+		//as they generate SIGTRAP that the process would't have recive
+		if(action == 0 || WSTOPSIG(status) != SIGTRAP){
+			printf("process recevied signal %s\n",strsignal(WSTOPSIG(status)));
+			ctx->sig_handle = WSTOPSIG(status);
+		}
 	}
+	printf("at 0x%p\n",(void*)get_pc(ctx->tracee));
 }
 
 
@@ -63,7 +70,6 @@ void stepi(tdbg_state *ctx,int argc,char **argv){
 	while(times > 0){
 		cont(ctx,PTRACE_SINGLESTEP);
 		//remove the SIGTRAP
-		if(ctx->sig_handle == SIGTRAP)ctx->sig_handle = 0;
 		times--;
 	}
 
@@ -114,6 +120,7 @@ void run(tdbg_state *ctx,int argc,char **argv){
 			exit(1);
 		}
 		//no need for a sig stop, execvp already trigger a SIGTRAP
+		execv(ctx->exe_args[0],ctx->exe_args);
 		execvp(ctx->exe_args[0],ctx->exe_args);
 		perror(ctx->exe_args[0]);
 		exit(0);
