@@ -2,10 +2,13 @@ export DESTDIR
 
 all : build-tld build-sar
 install : install-tld install-sar
-clean : clean-tld clean-sar
+clean : clean-tld clean-sar clean-libttc
 
 build-libttc :
 	@$(MAKE) -C libttc
+
+clean-libttc :
+	@$(MAKE) -C libttc clean
 
 build-tld : build-libttc
 	@$(MAKE) -C tld
