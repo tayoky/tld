@@ -73,11 +73,11 @@ if [ "$CC" = "" ] ; then
 		exit 1
 	fi
 fi
-if [ "AR" = "" ] ; then
+if [ "$AR" = "" ] ; then
 	if ${PREV}ar --version > /dev/null 2>/dev/null ; then
-		CC="${PREV}ar"
+		AR="${PREV}ar"
 	elif ${PREV}clang --version > /dev/null 2>/dev/null ; then
-		CC="${PREV}sar"
+		AR="${PREV}sar"
 	else
 		echo "error : no archiver found"
 		exit 1
