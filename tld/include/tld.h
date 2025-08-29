@@ -44,10 +44,6 @@ typedef struct token {
 #define T_AT          140
 #define T_FLAGS       141
 
-#define ARCH_I386     1
-#define ARCH_X86_64   2
-#define ARCH_AARCH64  3
-
 #define FORMAT_AUTO   0
 #define FORMAT_ELF64  1
 #define FORMAT_ELF32  2

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include "tld.h"
+#include "libttc.h"
 
 //small lexer for C like langages
 //tayoky 2025

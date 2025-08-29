@@ -17,13 +17,16 @@ void quit(tdbg_state *ctx,int argc,char **argv){
 }
 
 //continue until event
-void cont(tdbg_state *ctx){
+void cont(tdbg_state *ctx,int action){
 	if(!ctx->tracee){
 		error("no process to trace");
 		return;
 	}
 	int status;
-	ptrace(PTRACE_CONT,ctx->tracee,0,ctx->sig_handle);
+	if(ptrace(action ? action : PTRACE_CONT,ctx->tracee,0,ctx->sig_handle) < 0){
+		perror("ptarce");
+		return;
+	}
 	ctx->sig_handle = 0;
 	if(waitpid(ctx->tracee,&status,0) < 0){
 		perror("waitpid");
@@ -43,6 +46,29 @@ void cont(tdbg_state *ctx){
 	}
 }
 
+
+void stepi(tdbg_state *ctx,int argc,char **argv){
+	if(!ctx->tracee){
+		error("no process to trace");
+		return;
+	}
+	long times = 1;
+	if(argc > 2){
+		error("too many argument");
+		return;
+	} else if(argc == 2){
+		//TODO : use strtol or expr evaluator
+		times = atoi(argv[1]);
+	}
+	while(times > 0){
+		cont(ctx,PTRACE_SINGLESTEP);
+		//remove the SIGTRAP
+		if(ctx->sig_handle == SIGTRAP)ctx->sig_handle = 0;
+		times--;
+	}
+
+}
+
 void c(tdbg_state *ctx,int argc,char **argv){
 	long times = 1;
 	if(argc > 2){
@@ -53,7 +79,7 @@ void c(tdbg_state *ctx,int argc,char **argv){
 		times = atoi(argv[1]);
 	}
 	while(times > 0){
-		cont(ctx);
+		cont(ctx,0);
 		times--;
 	}
 }
@@ -112,13 +138,14 @@ void run(tdbg_state *ctx,int argc,char **argv){
 	printf("trace %ld\n",(long)child);
 
 	ctx->tracee = child;
-	cont(ctx);
+	cont(ctx,0);
 }
 
 tdbg_cmd commands[] = {
-	CMD(quit,"quit","q","exit"),
-	CMD(run ,"run"),
-	CMD(c   ,"continue","c"),
+	CMD(quit ,"quit","q","exit"),
+	CMD(run  ,"run"),
+	CMD(c    ,"continue","c"),
+	CMD(stepi,"stepi","si"),
 };
 
 void cmd(tdbg_state *ctx,char *buf){

@@ -6,6 +6,10 @@
 #include <errno.h>
 #endif
 
+#define ARCH_I386     1
+#define ARCH_X86_64   2
+#define ARCH_AARCH64  3
+
 extern const char *progname;
 
 void error(const char *fmt,...);
