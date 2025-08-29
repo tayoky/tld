@@ -85,20 +85,22 @@ void append_file(FILE *ar,const char *path){
 	header.ar_name[strlen(header.ar_name)] = '/';
 	fseek(f,0,SEEK_END);
 	size_t size = ftell(f);
-	snprintf(header.ar_size,10,"%-10zu",size);
-	memcpy(header.ar_fmag,ARFMAG,2);
+
+	//each null terminator get overwritten by the next feild, no need to avoid it
 	time_t date = time(NULL);
-	snprintf(header.ar_date,12,"%-12ld",(long)date);
+	snprintf(header.ar_date,13,"%-12ld",(long)date);
 #ifdef __unix__
 	struct stat st;
 	if(stat(path,&st) < 0){
 		perror(path);
 		exit(EXIT_FAILURE);
 	}
-	snprintf(header.ar_uid,6,"%-6ld",(long)st.st_uid);
-	snprintf(header.ar_gid,6,"%-6ld",(long)st.st_gid);
-	snprintf(header.ar_mode,8,"%-8lo",(long)st.st_mode);
+	snprintf(header.ar_uid,7,"%-6ld",(long)st.st_uid);
+	snprintf(header.ar_gid,7,"%-6ld",(long)st.st_gid);
+	snprintf(header.ar_mode,9,"%-8lo",(long)st.st_mode);
 #endif
+	snprintf(header.ar_size,11,"%-10zu",size);
+	memcpy(header.ar_fmag,ARFMAG,2);
 	fwrite(&header,sizeof(header),1,ar);
 	rewind(f);
 	copy_file(f,size,ar);
@@ -137,14 +139,14 @@ int main(int argc,char **argv){
 				error("invalid magic number");
 				return EXIT_FAILURE;
 			}
-		} else {
+		} else if(strchr(argv[1],'r') || strchr(argv[1],'q')){
 			warning("creating archive");
 			file = fopen(argv[2],"w+");
 			if(file)fputs(ARMAG,file);
 		}
 	}
 	if(!file){
-		perror(argv[1]);
+		perror(argv[2]);
 		return EXIT_FAILURE;
 	}
 	fseek(file,0,SEEK_END);
@@ -163,7 +165,7 @@ int main(int argc,char **argv){
 	//for operations on all files
 	fseek(file,SARMAG,SEEK_SET);
 	for(;;){
-		if(ftell(file) == size)break;
+		if((size_t)ftell(file) == size)break;
 		struct ar_hdr header;
 		if(!fread(&header,sizeof(struct ar_hdr),1,file)){
 			perror("read");

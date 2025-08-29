@@ -25,6 +25,10 @@ for i in "$@"; do
 			CC="${i#*=}"
 			shift # past argument=value
 			;;
+		--ar=*)
+			AR="${i#*=}"
+			shift # past argument=value
+			;;
 		--cflags=*)
 			CFLAGS="${i#*=}"
 			shift
@@ -69,6 +73,16 @@ if [ "$CC" = "" ] ; then
 		exit 1
 	fi
 fi
+if [ "AR" = "" ] ; then
+	if ${PREV}ar --version > /dev/null 2>/dev/null ; then
+		CC="${PREV}ar"
+	elif ${PREV}clang --version > /dev/null 2>/dev/null ; then
+		CC="${PREV}sar"
+	else
+		echo "error : no archiver found"
+		exit 1
+	fi
+fi
 
 #if host is NULL get it from compiler
 if [ "$HOST" = "" ] ; then
@@ -82,6 +96,7 @@ echo "#generated automatically by ./configure" > config.mk
 echo "HOST=$HOST" >> config.mk
 echo "PREFIX=$PREFIX" >> config.mk
 echo "CC=$CC" >> config.mk
+echo "AR=$AR" >> config.mk
 echo "CFLAGS=$CFLAGS $OPT" >> config.mk
 echo "SYSROOT=$SYSROOT"  >> config.mk
 
