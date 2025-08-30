@@ -16,6 +16,22 @@ void quit(tdbg_state *ctx,int argc,char **argv){
 	exit(0);
 }
 
+void backtrace(tdbg_state *ctx,int argc,char **argv){
+	long times = 10000;
+	if(argc > 2){
+		error("too many argument");
+		return;
+	} else if(argc == 2){
+		//TODO : use strtol or expr evaluator
+		times = atoi(argv[1]);
+	}
+	if(!ctx->tracee){
+		error("no process to trace");
+		return;
+	}
+	ptrace_show_backtrace(ctx->tracee,times);
+}
+
 //continue until event
 void cont(tdbg_state *ctx,int action){
 	if(!ctx->tracee){
@@ -149,10 +165,11 @@ void run(tdbg_state *ctx,int argc,char **argv){
 }
 
 tdbg_cmd commands[] = {
-	CMD(quit ,"quit","q","exit"),
-	CMD(run  ,"run"),
-	CMD(c    ,"continue","c"),
-	CMD(stepi,"stepi","si"),
+	CMD(quit     ,"quit","q","exit"),
+	CMD(run      ,"run","r"),
+	CMD(c        ,"continue","c"),
+	CMD(stepi    ,"stepi","si"),
+	CMD(backtrace,"backtrace","where","bt"),
 };
 
 void cmd(tdbg_state *ctx,char *buf){

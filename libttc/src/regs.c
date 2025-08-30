@@ -19,9 +19,37 @@
 #elif defined(__aarch64__)
 #define SP sp
 #define PC pc
+#define BP regs[29]
 #else
 //unsupported arch
 #define UNSUPPORTED_ARCH 1
+#endif
+
+#ifdef PTRACE_GETREGS
+int get_regs(pid_t tracee, struct user_regs_struct *regs){
+	if(ptrace(PTRACE_GETREGS,tracee,regs,0) < 0){
+		perror("ptrace");
+		return -1;
+	}
+	return 0;
+}
+#elif defined(PTRACE_GETREGSET)
+int get_regs(pid_t tracee, struct user_regs_struct *regs){
+	struct iovec vec = {
+		.iov_base = regs,
+		.iov_len  = sizeof(*regs),
+	};
+	if(ptrace(PTRACE_GETREGSET,tracee,(void*)NT_PRSTATUS,&vec,0) < 0){
+		perror("ptrace");
+		return -1;\
+	}
+	return 0;
+}
+#else
+int get_regs(pid_t tracee, struct user_regs_struct *regs)
+	error("unsupported ptrace(PTRACE_GETREGS) and ptrace(PTRACE_GETREGSET)");
+	return -1:
+}
 #endif
 
 #ifdef UNSUPPORTED_ARCH
@@ -30,24 +58,10 @@
 	error("unsupported arch");\
 	return 0;\
 }
-#elif defined(PTRACE_GETREGS)
-#define FUNC(name,reg) uintptr_t name(pid_t tracee){\
-	struct user_regs_struct regs;\
-	if(ptrace(PTRACE_GETREGS,tracee,&regs,0) < 0){\
-		perror("ptrace");\
-		return 0;\
-	}\
-	return regs.reg;\
-}
 #else
 #define FUNC(name,reg) uintptr_t name(pid_t tracee){\
 	struct user_regs_struct regs;\
-	struct iovec vec = {\
-		.iov_base = &regs,\
-		.iov_len  = sizeof(regs),\
-	};\
-	if(ptrace(PTRACE_GETREGSET,tracee,(void*)NT_PRSTATUS,&vec,0) < 0){\
-		perror("ptrace");\
+	if(get_regs(tracee,&regs) < 0){\
 		return 0;\
 	}\
 	return regs.reg;\
@@ -56,3 +70,4 @@
 
 FUNC(get_sp,SP)
 FUNC(get_pc,PC)
+FUNC(get_bp,BP)
